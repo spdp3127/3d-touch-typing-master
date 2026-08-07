@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Touch Typing Master — 3DTouch-TypingMaster.com | Global Multilingual Edition</title>
+  <meta name="description" content="3D Touch Typing Master (3DTouch-TypingMaster.com) — AAA-grade 3D touch typing trainer: 40 Progressive Levels, 100+ World Languages, 4-Layer Modifier Keymaps, 10 Color Themes, Cyberpunk & Mechanical 3D Physics.">
+  <link rel="canonical" href="https://3dtouch-typingmaster.com/">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cyan: #00f5ff;
+      --magenta: #ff00e5;
+      --purple: #9b30ff;
+      --gold: #ffd700;
+      --green: #00ff88;
+      --bg-deep: #04060f;
+      --bg-card: rgba(8, 12, 28, 0.88);
+      --border-glow: rgba(0, 245, 255, 0.22);
+    }
+
+    html, body {
+      background: var(--bg-deep);
+      color: #e2e8f0;
+      font-family: 'Inter', 'Noto Sans', sans-serif;
+      overflow-x: hidden;
+      user-select: none;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,245,255,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 85%, rgba(155,48,255,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 35% at 60% 30%, rgba(255,0,229,0.05) 0%, transparent 50%),
+        linear-gradient(180deg, #04060f 0%, #070a1a 50%, #050810 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black 0%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black 0%, transparent 100%);
+      animation: gridPulse 8s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    @keyframes scaleIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+    @keyframes pulseGlow { 0%,100%{box-shadow: 0 0 20px rgba(0,245,255,0.4);} 50%{box-shadow: 0 0 40px rgba(0,245,255,0.8), 0 0 80px rgba(255,0,229,0.5);} }
+
+    #root { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .app-wrapper {
+      max-width: 1550px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 100vh;
+    }
+
+    .glass {
+      background: rgba(8, 14, 32, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 245, 255, 0.14);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .glass-cyan {
+      background: rgba(0, 245, 255, 0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 245, 255, 0.22);
+      box-shadow: 0 0 24px rgba(0, 245, 255, 0.08);
+    }
+
+    .btn-cyber {
+      background: rgba(8, 14, 32, 0.85);
+      border: 1px solid rgba(0, 245, 255, 0.28);
+      color: #00f5ff;
+      padding: 7px 14px;
+      border-radius: 9px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-cyber:hover {
+      background: rgba(0, 245, 255, 0.14);
+      border-color: #00f5ff;
+      box-shadow: 0 0 16px rgba(0, 245, 255, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-cyber.active {
+      background: rgba(0, 245, 255, 0.22);
+      border-color: #00f5ff;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .btn-start-test {
+      background: linear-gradient(135deg, #00f5ff 0%, #ff00e5 100%);
+      border: none;
+      color: #ffffff;
+      padding: 14px 36px;
+      border-radius: 14px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 0 24px rgba(0, 245, 255, 0.5), 0 0 48px rgba(255, 0, 229, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    .btn-start-test:hover {
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 0 0 40px rgba(0, 245, 255, 0.8), 0 0 80px rgba(255, 0, 229, 0.6);
+    }
+
+    .btn-layer {
+      background: rgba(4, 8, 20, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 7px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-layer:hover { color: #00f5ff; border-color: rgba(0, 245, 255, 0.4); }
+    .btn-layer.active { background: rgba(0, 245, 255, 0.18); border-color: #00f5ff; color: #00f5ff; box-shadow: 0 0 14px rgba(0, 245, 255, 0.4); }
+
+    .btn-lang {
+      background: linear-gradient(135deg, rgba(0, 245, 255, 0.12), rgba(155, 48, 255, 0.12));
+      border: 1px solid rgba(0, 245, 255, 0.35);
+      color: #ffffff;
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 14px rgba(0, 245, 255, 0.15);
+    }
+
+    .btn-lang:hover { border-color: #00f5ff; box-shadow: 0 0 24px rgba(0, 245, 255, 0.45); transform: translateY(-1px); }
+
+    .theme-swatch-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
+    }
+    .theme-swatch-btn:hover { transform: scale(1.15); }
+    .theme-swatch-btn.active { border-color: #ffffff; box-shadow: 0 0 12px #ffffff; transform: scale(1.18); }
+
+    .lang-modal-overlay, .modal-overlay {
+      position: fixed; inset: 0; background: rgba(2, 4, 12, 0.88); backdrop-filter: blur(20px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.25s ease;
+    }
+
+    .lang-modal, .level-modal {
+      background: rgba(7, 11, 26, 0.96); border: 1px solid rgba(0, 245, 255, 0.3); box-shadow: 0 0 60px rgba(0, 245, 255, 0.2), 0 0 120px rgba(155, 48, 255, 0.15); border-radius: 24px; width: 100%; max-width: 1100px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .lang-modal-header, .level-modal-header { padding: 20px 24px 16px; border-bottom: 1px solid rgba(0, 245, 255, 0.12); display: flex; flex-direction: column; gap: 14px; }
+    .lang-search { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 245, 255, 0.25); border-radius: 12px; padding: 10px 16px; color: #ffffff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: all 0.2s ease; }
+    .lang-search:focus { border-color: #00f5ff; box-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
+
+    .region-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .region-tab { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: #64748b; padding: 5px 12px; border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
+    .region-tab:hover { color: #00f5ff; border-color: rgba(0, 245, 255, 0.3); }
+    .region-tab.active { background: rgba(0, 245, 255, 0.12); border-color: #00f5ff; color: #00f5ff; box-shadow: 0 0 12px rgba(0, 245, 255, 0.25); }
+
+    .lang-grid { padding: 20px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; overflow-y: auto; max-height: calc(85vh - 160px); }
+    .level-grid { padding: 20px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; overflow-y: auto; max-height: calc(85vh - 120px); }
+
+    .lang-card, .level-card { background: rgba(12, 18, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .lang-card:hover, .level-card:hover { background: rgba(0, 245, 255, 0.08); border-color: rgba(0, 245, 255, 0.4); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 245, 255, 0.15); }
+    .lang-card.selected, .level-card.selected { background: rgba(0, 245, 255, 0.14); border-color: #00f5ff; box-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
+    .level-card.locked { opacity: 0.5; cursor: not-allowed; border-color: rgba(255,255,255,0.04); }
+
+    .lang-card-flag { font-size: 20px; margin-bottom: 2px; }
+    .lang-card-name { fontFamily: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; color: #f8fafc; }
+    .lang-card-native { font-size: 11px; color: #64748b; }
+    .lang-card-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+
+    .script-tag { font-size: 8px; padding: 1px 6px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .rtl-badge { font-size: 8px; padding: 1px 6px; border-radius: 4px; background: rgba(251, 146, 60, 0.15); border: 1px solid rgba(251, 146, 60, 0.3); color: #fb923c; font-family: 'Orbitron', sans-serif; font-weight: 700; }
+
+    .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 14px; }
+    @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .sidebar { display: flex; flex-direction: column; gap: 12px; }
+    .content-col { display: flex; flex-direction: column; gap: 12px; }
+
+    .metric-card { background: rgba(4, 8, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; }
+
+    .prompt-pending { color: #475569; }
+    .prompt-correct { color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.6); }
+    .prompt-error { color: #ff2a5f; background: rgba(255, 42, 95, 0.2); text-shadow: 0 0 10px rgba(255, 42, 95, 0.8); }
+    .prompt-current { color: #00f5ff; background: rgba(0, 245, 255, 0.16); border-bottom: 2px solid #00f5ff; text-shadow: 0 0 14px rgba(0, 245, 255, 0.9); animation: gridPulse 1.2s infinite; }
+
+    .finger-badge { padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.2s ease; }
+    .xp-bar-track { background: rgba(255, 255, 255, 0.08); border-radius: 4px; height: 6px; overflow: hidden; }
+    .xp-bar-fill { background: linear-gradient(90deg, #ffd700, #ff00e5); height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+
+    .scanlines::before { content: " "; position: absolute; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; z-index: 2; pointer-events: none; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <footer style="text-align:center;padding:18px 16px 22px;font-family:'Rajdhani','Inter',sans-serif;font-size:12.5px;letter-spacing:0.14em;color:#64748b;background:linear-gradient(180deg,#05070f 0%,#070b16 100%);border-top:1px solid #1b2540;position:relative;z-index:5;">
+    <span style="font-family:'Orbitron',sans-serif;color:#8b5cf6;font-weight:600;">3DTouch-TypingMaster.com</span>
+    &nbsp;·&nbsp; MASTER TOUCH TYPING IN 100+ LANGUAGES · 40 LEVELS
+    <br style="line-height:6px;">
+    <span style="color:#475569;font-size:11px;">© 2026 3D Touch Typing Master — All rights reserved.</span>
+  </footer>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    /* ═══════════════════════════════════════════════════════════════
+       40 PROGRESSIVE LEVELS SYSTEM
+    ═══════════════════════════════════════════════════════════════ */
+    const LEVELS = (() => {
+      const names = [
+        "Home Row Revival", "Top Row Tempest", "Bottom Row Blitz", "Cluster Control", "Symbol Storm",
+        "Rhythm Regimen", "Velocity Vortex", "Neon Night Sprint", "Precision Protocol", "Cyber Circuit Sprint",
+        "Digital Dash", "Turbo Typing Trial", "Hyper Speed Hurdle", "Sonic Stroke Sprint", "Lightning Letter Loop",
+        "Quantum Keystroke Quest", "Plasma Pace Path", "Nova Notation Ninja", "Galaxy Glide Grandmaster", "Infinity Input Run",
+        "Omega Output Odyssey", "Stellar Speed Summit", "Cosmic Code Crusade", "Nebula Navigation Nexus", "Hyperspace Heroics",
+        "Chrono Chars Champion", "Ultra Velocity Uprising", "Maelstrom of Mastery", "Cybernetic Zenith", "LEGEND OF THE KEYBOARD GODS"
+      ];
+      const tier = (id) => {
+        if (id <= 15) return { difficulty: "Adventurer", icon: "🟡" };
+        if (id <= 20) return { difficulty: "Specialist", icon: "🟡" };
+        if (id <= 25) return { difficulty: "Warrior", icon: "🧡" };
+        if (id <= 30) return { difficulty: "Elite", icon: "🧡" };
+        if (id <= 35) return { difficulty: "Champion", icon: "💜" };
+        return { difficulty: "Grandmaster", icon: "🔴" };
+      };
+      const levels = [
+        { id: 1, name: "Level 1: Home Row Foundations", targetWpm: 8,  difficulty: "Novice",       icon: "🟢", xpReward: 100, desc: "Master home row keys & basic rhythm." },
+        { id: 2, name: "Level 2: Top Row Expansion",     targetWpm: 12, difficulty: "Apprentice",   icon: "🟢", xpReward: 150, desc: "Expand to top row letters & reach." },
+        { id: 3, name: "Level 3: Bottom Row Precision",  targetWpm: 16, difficulty: "Adventurer",   icon: "🟡", xpReward: 200, desc: "Precision control over bottom row keys." },
+        { id: 4, name: "Level 4: Full Keyboard Mastery",  targetWpm: 20, difficulty: "Specialist",   icon: "🟡", xpReward: 250, desc: "Seamless navigation across all letter rows." },
+        { id: 5, name: "Level 5: Numbers & Symbols",     targetWpm: 25, difficulty: "Warrior",      icon: "🧡", xpReward: 300, desc: "Speed test with numbers & punctuation." },
+        { id: 6, name: "Level 6: Fluid Sentence Flow",   targetWpm: 30, difficulty: "Elite",        icon: "🧡", xpReward: 400, desc: "Complex sentence rhythm & zero errors." },
+        { id: 7, name: "Level 7: Speed Demon Challenge", targetWpm: 36, difficulty: "Champion",     icon: "💜", xpReward: 500, desc: "Push past your comfort zone under time pressure." },
+        { id: 8, name: "Level 8: Cyberpunk Quote Rush",  targetWpm: 42, difficulty: "Cyber Master", icon: "💜", xpReward: 600, desc: "Quotes, symbols & extreme precision." },
+        { id: 9, name: "Level 9: Global Grandmaster",   targetWpm: 48, difficulty: "Grandmaster",  icon: "🔴", xpReward: 800, desc: "Near perfection across international scripts." },
+        { id: 10, name: "Level 10: Cyberpunk God Boss",  targetWpm: 55, difficulty: "God Mode",    icon: "⚡", xpReward: 1000, desc: "Ultimate Speed Boss Challenge!" },
+      ];
+      // Levels 11-20: gentle ramp continuing from L10 (55) toward L21's 131.
+      const MID = { 11: 62, 12: 69, 13: 76, 14: 83, 15: 90, 16: 97, 17: 104, 18: 111, 19: 118, 20: 125 };
+      for (let id = 11; id <= 40; id++) {
+        const t = tier(id);
+        const tw = id <= 20 ? MID[id] : Math.round(100 * Math.pow(1.025, id - 10));
+        levels.push({
+          id,
+          name: `Level ${id}: ${names[id - 11]}`,
+          targetWpm: tw,
+          difficulty: t.difficulty,
+          icon: t.icon,
+          xpReward: 1100 + (id - 11) * 150,
+          desc: `Paragraph marathon — ${tw} WPM target · earn 2★ to advance.`,
+        });
+      }
+      return levels;
+    })();
+
+    // Multilingual Level Prompts Generator
+    // Manual transliteration for Latin letters that NFD does NOT decompose (all values are
+    // single base letters so a single keypress can match them). Vowel tone-marks and the rest
+    // of the precomposed Latin-1/Latin Extended letters decompose via NFD and need no entry.
+    const LATIN_TRANSLIT = {
+      "đ": "d", "Đ": "d", "ð": "d", "Ð": "d", "ď": "d", "Ď": "d",
+      "ø": "o", "Ø": "o", "ǿ": "o", "Ǿ": "o",
+      "æ": "a", "Æ": "a", "œ": "o", "Œ": "o",
+      "ß": "s", "ẞ": "s", "ſ": "s",
+      "þ": "t", "Þ": "t",
+      "ł": "l", "Ł": "l",
+      "ħ": "h", "Ħ": "h",
+      "ŋ": "n", "Ŋ": "n", "ƞ": "n",
+      "ı": "i", "ĸ": "k", "ƒ": "f", "ə": "e", "Ə": "e",
+      "ǳ": "d", "ǲ": "d", "Ǳ": "d", "ȷ": "j", "ǰ": "j", "ĳ": "j", "Ĳ": "j", "ﬀ": "f", "ﬁ": "f", "ﬂ": "f", "ﬃ": "f", "ﬄ": "f", "ﬅ": "s", "ﬆ": "s"
+    };
+    const stripDiacritics = s => {
+      const nfd = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return nfd.split("").map(c => LATIN_TRANSLIT[c] || c).join("");
+    };
+
+    // Hand-crafted full 10-level prompts for select languages (else auto-generated)
+    const LANG_LEVELS_OVERRIDE = {
+      "ml": [
+        "ൊ െ ് ി ു പ ര ക ത ച ട",
+        "ൌ ൈ ാ ീ ൂ ബ ഹ ഗ ദ ജ ള ഥ",
+        "ഴ ം മ ന വ ല സ യ റ ണ",
+        "ലോകം വളരെ മനോഹരമായ ഒരു സ്ഥലമാണ്",
+        "൧ ൨ ൩ ൪ ൫ ൬ ൭ ൮ ൯ ൦ - = ! @ #",
+        "ജ്ഞാനവും അറിവും മനുഷ്യന്റെ വലിയ സമ്പത്താണ്",
+        "കേരളത്തിലെ മനോഹരമായ പ്രകൃതിദൃശ്യങ്ങൾ ഏവരെയും ആകർഷിക്കുന്നു",
+        "വിദ്യാഭ്യാസം കൊണ്ട് സമൂഹം പുരോഗതി പ്രാപിക്കുന്നു",
+        "സാങ്കേതികവിദ്യ ലോകത്തെ കൂടുതൽ അടുത്തേക്ക് കൊണ്ടുവരുന്നു",
+        "മലയാള ഭാഷാ പ്രാവീണ്യം നേടുന്നത് അഭിമാനകരമായ നേട്ടമാണ്"
+      ]
+    };
+
+    // Extra sentences (in-script) used to build levels 6-10 for non-Latin languages
+    const LANG_EXTRA = {
+      "hi": ["भारत एक विविधताओं से भरा देश है", "शिक्षा ही मनुष्य की सबसे बड़ी पूंजी है"],
+      "mr": ["मराठी ही महाराष्ट्राची राजभाषा आहे", "शिक्षण ही माणसाची सर्वात मोठी संपत्ती आहे"],
+      "ne": ["नेपाल एउटा सुन्दर देश हो", "शिक्षा नै मानिसको सबैभन्दा ठूलो सम्पत्ति हो"],
+      "sa": ["विद्या ददाति विनयं विनयाद् याति पात्रताम्", "सत्यमेव जयते नानृतम्"],
+      "ta": ["தமிழ் உலகின் மிகப் பழமையான மொழிகளில் ஒன்று", "கல்வி ஒருவனின் சிறந்த செல்வம்"],
+      "te": ["తెలుగు భారతదేశంలో ఎక్కువగా మాట్లాడే భాషలలో ఒకటి", "విద్య ఒకరి జీవితంలో చాలా ముఖ్యమైనది"],
+      "kn": ["ಕನ್ನಡ ಕರ್ನಾಟಕದ ರಾಜ್ಯ ಭಾಷೆ", "ಶಿಕ್ಷಣವು ಜೀವನದಲ್ಲಿ ಬಹಳ ಮುಖ್ಯ"],
+      "bn": ["বাংলা একটি সুন্দর ও সমৃদ্ধ ভাষা", "শিক্ষা মানুষের জীবনে সবচেয়ে বড় সম্পদ"],
+      "pa": ["ਪੰਜਾਬ ਦੀ ਧਰਤੀ ਬਹੁਤ ਸੋਹਣੀ ਹੈ", "ਮਿਹਨਤ ਹੀ ਸਫਲਤਾ ਦੀ ਕੁੰਜੀ ਹੈ"],
+      "gu": ["ગુજરાત એક સુંદર રાજ્ય છે", "શિક્ષણ જીવનમાં ખૂબ જ મહત્વપૂર્ણ છે"],
+      "or": ["ଓଡ଼ିଆ ଏକ ସୁନ୍ଦର ଭାଷା", "ଶିକ୍ଷା ଜୀବନରେ ବହୁତ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ"],
+      "si": ["සිංහල ලංකාවේ ජාතික භාෂාවයි", "අධ්‍යාපනය ජීවිතයේ වැදගත්ම දෙයයි"],
+      "ar": ["العلم نور والجهل ظلام", "الوقت كالسيف إن لم تقطعه قطعك"],
+      "fa": ["دانش روشنایی است و نادانی تاریکی", "آموزش بزرگترین ثروت انسان است"],
+      "ur": ["علم روشنی ہے اور جہالت اندھیرا", "تعلیم انسان کی سب سے بڑی دولت ہے"],
+      "ru": ["знание это сила", "терпение и труд все перетрут"],
+      "uk": ["знання це сила", "освіта найбільше багатство людини"],
+      "he": ["החיים יפים ומלאים בהפתעות", "השפה העברית היא שפה עתיקה"],
+      "el": ["η γνωση ειναι δυναμη", "η παιδεια ειναι ο μεγαλυτερος θησαυρος"],
+      "ka": ["საქართველო ულამაზესი ქვეყანაა", "ცოდნა არის ძალა"],
+      "hy": ["հայերենը հին ու գեղեցիկ լեզու է", "գիտելիքը ուժ է"],
+      "th": ["ประเทศไทยมีวัฒนธรรมที่สวยงาม", "การศึกษาคือความสำเร็จของชีวิต"],
+      "ja": ["にほんの はなは さくらです", "あさはやく おきると いいことが あります"],
+      "ko": ["한국의 전통 음식은 맛있습니다", "꿈을 이루기 위해 노력합니다"],
+      "zh": ["中国是一个伟大的国家", "学习是进步的阶梯"],
+      "zh-TW": ["中國是一個偉大的國家", "學習是進步的階梯"],
+      "my": ["မြန်မာနိုင်ငံသည် လှပသောနိုင်ငံဖြစ်သည်", "ပညာသည် ဘဝ၏အရေးကြီးဆုံးအရာဖြစ်သည်"],
+      "am": ["እውቀት ኃይል ነው", "ትምህርት በህይወት ውስጥ በጣም አስፈላጊ ነው"]
+    };
+
+    // Guarantees every level from `fromIdx` (4 = level 4) onward is strictly longer than
+    // the previous one by appending filler sentences when needed.
+    function enforceParagraphGrowth(prompts, filler) {
+      for (let i = 3; i < prompts.length; i++) {
+        let guard = 0;
+        while (prompts[i].length <= prompts[i - 1].length && guard++ < 40) {
+          prompts[i] = prompts[i] + " " + filler[guard % filler.length];
+        }
+      }
+    }
+
+    // Builds a paragraph of ~targetWords by rotating through the language's sentences.
+    // minChars guarantees the paragraph strictly exceeds the previous level's length,
+    // so difficulty (length) always increases. Only reuses existing sentence characters,
+    // so keymap coverage is guaranteed.
+    function makeParagraph(sentences, targetWords, minChars = 0) {
+      const sents = sentences.filter(Boolean).map(s => String(s).trim()).filter(s => s.length > 0);
+      if (!sents.length) return "the quick brown fox jumps over the lazy dog";
+      const parts = [];
+      let total = 0;
+      let i = 0;
+      while ((total < targetWords || parts.join(" ").length <= minChars) && i < 300) {
+        const s = sents[i % sents.length];
+        parts.push(s);
+        total += s.split(/\s+/).length;
+        i++;
+      }
+      return parts.join(" ");
+    }
+
+    function buildLangLevels(lang) {
+      let baseLevels;
+      let sentences;
+      if (LANG_LEVELS_OVERRIDE[lang.code]) {
+        baseLevels = [...LANG_LEVELS_OVERRIDE[lang.code]];
+        sentences = baseLevels.slice(3);
+      } else if (lang.script === "Latin") {
+        return null; // keep the classic English touch-typing drills
+      } else {
+        const base = (lang.prompt || "").trim();
+        const extras = LANG_EXTRA[lang.code] || [];
+        sentences = [base, ...extras].filter(Boolean);
+        const chars = [...new Set(base.replace(/\s/g, ""))];
+        const chunk = (s, e) => chars.slice(s, e).length ? chars.slice(s, e).join(" ") : chars.slice(0, 15).join(" ");
+        baseLevels = [
+          chunk(0, 15),
+          chunk(15, 30),
+          chunk(30, 45),
+          base,
+          base + " 1 2 3 4 5 6 7 8 9 0",
+          extras[0] ? base + " " + extras[0] : base + "  " + base,
+          extras[1] ? base + " " + extras[1] : (base + " ").repeat(3).trim(),
+          extras[0] ? extras[0] + " " + (extras[1] || extras[0]) : (base + " ").repeat(4).trim(),
+          extras[1] ? base + " " + extras[0] + " " + extras[1] : (base + " ").repeat(5).trim(),
+          extras[0] ? base + " " + extras[0] + " " + (extras[1] || extras[0]) + " " + base : (base + " ").repeat(6).trim(),
+        ];
+      }
+      // Guarantee strict paragraph growth from level 4 onward (levels 1-3 are key drills)
+      enforceParagraphGrowth(baseLevels, sentences);
+      // Levels 11-40: progressively longer paragraphs in the language's own script,
+      // each strictly exceeding the previous (post-enforcement) level's length
+      let prevLen = baseLevels[baseLevels.length - 1].length;
+      for (let id = 11; id <= 40; id++) {
+        const p = makeParagraph(sentences, 14 + Math.round(id * 2.4), prevLen);
+        baseLevels.push(p);
+        prevLen = p.length;
+      }
+      return baseLevels;
+    }
+
+    const LATIN_DEFAULT_PROMPTS = [
+      "a s d f j k l s d f j k a s d f j k l",
+      "q w e r t y u i o p a s d f j k l",
+      "z x c v b n m a s d f j k l q w e r t y",
+      "the quick brown fox jumps over the lazy dog",
+      "1 2 3 4 5 6 7 8 9 0 ! @ # $ % ^ & * ( )",
+      "technology and innovation drive the future of humanity",
+      "cyberpunk cities glow with neon lights and digital dreams",
+      "to be or not to be that is the question whether tis nobler",
+      "quantum computing enables unprecedented parallel processing speed",
+      "the supreme grandmaster typist achieves legendary speed and zero error rate"
+    ];
+    const LATIN_SENTENCES = LATIN_DEFAULT_PROMPTS.slice(3);
+
+    function getLatinLevels(lang) {
+      const list = LATIN_DEFAULT_PROMPTS.map((p, i) => (i === 3 ? (lang.prompt || p) : p));
+      enforceParagraphGrowth(list, [lang.prompt || LATIN_SENTENCES[0], ...LATIN_SENTENCES]);
+      return list;
+    }
+
+    function getLevelPrompt(lang, levelId) {
+      if (lang.levels) return lang.levels[levelId - 1] || lang.prompt;
+      const defaultPrompts = getLatinLevels(lang);
+      if (levelId <= 10) return defaultPrompts[levelId - 1] || lang.prompt;
+      const sents = LATIN_SENTENCES.concat(lang.prompt || LATIN_SENTENCES[0]);
+      const prevLen = levelId === 11 ? (defaultPrompts[9] || "").length : getLevelPrompt(lang, levelId - 1).length;
+      return makeParagraph(sents, 14 + Math.round(levelId * 2.4), prevLen);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       10 VARIETY COLOR THEMES
+    ═══════════════════════════════════════════════════════════════ */
+    const COLOR_THEMES = [
+      { id: "cyan",    name: "Cyber Cyan",     icon: "🩵", keyBody: 0x0d1222, keyTop: 0x121930, chassis: 0x050912, accentHex: "#00f5ff", accentInt: 0x00f5ff, textColor: "#ffffff", isLight: false, swatch: "linear-gradient(135deg, #00f5ff, #0d1222)" },
+      { id: "vapor",   name: "Vapor Magenta",  icon: "💜", keyBody: 0x1a0628, keyTop: 0x260a3a, chassis: 0x0f0318, accentHex: "#ff00e5", accentInt: 0xff00e5, textColor: "#ff77f0", isLight: false, swatch: "linear-gradient(135deg, #ff00e5, #1a0628)" },
+      { id: "matrix",  name: "Matrix Green",   icon: "💚", keyBody: 0x061a0e, keyTop: 0x0a2615, chassis: 0x030f08, accentHex: "#00ff88", accentInt: 0x00ff88, textColor: "#88ffbb", isLight: false, swatch: "linear-gradient(135deg, #00ff88, #061a0e)" },
+      { id: "amber",   name: "Amber Fire",     icon: "🧡", keyBody: 0x1a0d04, keyTop: 0x261407, chassis: 0x0f0702, accentHex: "#ff9900", accentInt: 0xff9900, textColor: "#ffcc66", isLight: false, swatch: "linear-gradient(135deg, #ff9900, #1a0d04)" },
+      { id: "silver",  name: "Silver Minimal", icon: "🤍", keyBody: 0xf0f4ff, keyTop: 0xe8edf8, chassis: 0xdce2ee, accentHex: "#00b8d4", accentInt: 0x00b8d4, textColor: "#1e293b", isLight: true,  swatch: "linear-gradient(135deg, #00b8d4, #e8edf8)" },
+      { id: "crimson", name: "Crimson Rogue",  icon: "🔴", keyBody: 0x200609, keyTop: 0x30090e, chassis: 0x120305, accentHex: "#ff2a5f", accentInt: 0xff2a5f, textColor: "#ffccd5", isLight: false, swatch: "linear-gradient(135deg, #ff2a5f, #200609)" },
+      { id: "cobalt",  name: "Royal Cobalt",   icon: "💙", keyBody: 0x06142e, keyTop: 0x0a2046, chassis: 0x030a1a, accentHex: "#38bdf8", accentInt: 0x38bdf8, textColor: "#bae6fd", isLight: false, swatch: "linear-gradient(135deg, #38bdf8, #06142e)" },
+      { id: "sakura",  name: "Sakura Pink",    icon: "🌸", keyBody: 0xfdf2f8, keyTop: 0xf5f3ff, chassis: 0xe9d5ff, accentHex: "#f43f5e", accentInt: 0xf43f5e, textColor: "#581c87", isLight: true,  swatch: "linear-gradient(135deg, #f43f5e, #fdf2f8)" },
+      { id: "solar",   name: "Solar Yellow",   icon: "💛", keyBody: 0x18181b, keyTop: 0x27272a, chassis: 0x09090b, accentHex: "#facc15", accentInt: 0xfacc15, textColor: "#fef08a", isLight: false, swatch: "linear-gradient(135deg, #facc15, #18181b)" },
+      { id: "retro",   name: "Retro 1980s IBM",icon: "📻", keyBody: 0xe2d7c5, keyTop: 0xd1c4b2, chassis: 0x4a4e57, accentHex: "#f97316", accentInt: 0xf97316, textColor: "#27272a", isLight: true,  swatch: "linear-gradient(135deg, #f97316, #e2d7c5)" },
+    ];
+
+    /* ═══════════════════════════════════════════════════════════════
+       100+ LANGUAGE DATABASE
+    ═══════════════════════════════════════════════════════════════ */
+    const LANG_DB = [
+      ["ml","Malayalam","മലയാളം","South Asian","Malayalam",false,"ലോകം വളരെ മനോഹരമായ ഒരു സ്ഥലമാണ്","🇮🇳","#10b981"],
+      ["hi","Hindi","हिन्दी","South Asian","Devanagari",false,"संसार एक बहुत सुंदर स्थान है","🇮🇳","#f97316"],
+      ["ta","Tamil","தமிழ்","South Asian","Tamil",false,"உலகம் மிகவும் அழகான ஒரு இடம்","🇮🇳","#fb923c"],
+      ["te","Telugu","తెలుగు","South Asian","Telugu",false,"ప్రపంచం చాలా అందమైన ప్రదేశం","🇮🇳","#8b5cf6"],
+      ["kn","Kannada","ಕನ್ನಡ","South Asian","Kannada",false,"ಪ್ರಪಂಚವು ತುಂಬಾ ಸುಂದರವಾದ ಸ್ಥಳವಾಗಿದೆ","🇮🇳","#14b8a6"],
+      ["bn","Bengali","বাংলা","South Asian","Bengali",false,"পৃথিবী একটি অত্যন্ত সুন্দর স্থান","🇮🇳","#6366f1"],
+      ["pa","Punjabi","ਪੰਜਾਬੀ","South Asian","Gurmukhi",false,"ਦੁਨੀਆ ਇੱਕ ਬਹੁਤ ਹੀ ਸੁੰਦਰ ਜਗ੍ਹਾ ਹੈ","🇮🇳","#f59e0b"],
+      ["gu","Gujarati","ગુજરાતી","South Asian","Gujarati",false,"દુનિયા ખૂબ જ સુંદર જગ્યા છે","🇮🇳","#eab308"],
+      ["mr","Marathi","मराठी","South Asian","Devanagari",false,"जग हे खूप सुंदर ठिकाण आहे","🇮🇳","#f97316"],
+      ["or","Odia","ଓଡ଼ିଆ","South Asian","Odia",false,"ପୃଥିବୀ ଏକ ଅତ୍ୟନ୍ତ ସୁନ୍ଦର ସ୍ଥାନ","🇮🇳","#22d3ee"],
+      ["ur","Urdu","اردو","South Asian","Arabic",true,"دنیا ایک بہت خوبصورت جگہ ہے","🇵🇰","#06b6d4"],
+      ["ne","Nepali","नेपाली","South Asian","Devanagari",false,"संसार एक अति सुन्दर ठाउँ हो","🇳🇵","#f97316"],
+      ["si","Sinhala","සිංහල","South Asian","Sinhala",false,"ලෝකය ඉතා ලස්සන ස්ථානයකි","🇱🇰","#94a3b8"],
+      ["as","Assamese","অসমীয়া","South Asian","Bengali",false,"পৃথিৱীখন অতি ধুনীয়া ঠাই","🇮🇳","#6366f1"],
+      ["ks","Kashmiri","कॉशुर","South Asian","Devanagari",false,"दुनिया छु अख वारियाह खूब्सूरथ जाय","🇮🇳","#06b6d4"],
+      ["sd","Sindhi","سنڌي","South Asian","Arabic",true,"دنيا هڪ تمام خوبصورت جڳهه آهي","🇵🇰","#06b6d4"],
+      ["mai","Maithili","मैथिली","South Asian","Devanagari",false,"संसार बहुत सुंदर स्थान अछि","🇮🇳","#f97316"],
+      ["mni","Meitei","ꯃꯤꯇꯩꯂꯣꯟ","South Asian","Meitei",false,"ꯄꯨꯝꯅꯃꯛ ꯌꯥꯝꯅ ꯐꯖꯕ ꯃꯐꯝꯅꯤ","🇮🇳","#94a3b8"],
+      ["bo","Tibetan","བོད་སྐད","South Asian","Tibetan",false,"འཛམ་གླིང་ནི་ཤིན་ཏུ་མཛེས་པའི་གནས་ཡིན","🇨🇳","#94a3b8"],
+      ["dhi","Dhivehi","ދިވެހި","South Asian","Thaana",true,"ދުނިޔެއަކީ ވަރަށް ރީތި ތަނެކެވެ","🇲🇻","#06b6d4"],
+      ["sat","Santali","ᱥᱟᱱᱛᱟᱲᱤ","South Asian","Ol Chiki",false,"ᱫᱷᱟᱹᱨᱛᱤ ᱫᱚ ᱟᱹᱰᱤ ᱪᱚᱨᱚᱠ ᱴᱷᱟᱶ ᱠᱟᱱᱟ","🇮🇳","#f97316"],
+      ["sa","Sanskrit","संस्कृतम्","South Asian","Devanagari",false,"वसुधैव कुटुम्बकम् सर्वत्र शान्तिः","🇮🇳","#f97316"],
+
+      ["ja","Japanese","日本語","East Asian","Hiragana",false,"せかいは とても うつくしい ばしょです","🇯🇵","#f43f5e"],
+      ["ko","Korean","한국어","East Asian","Hangul",false,"세상은 정말 아름다운 곳입니다","🇰🇷","#ec4899"],
+      ["zh","Chinese (Simp)","中文(简体)","East Asian","CJK",false,"世界是一个非常美丽的地方","🇨🇳","#ec4899"],
+      ["zh-TW","Chinese (Trad)","中文(繁體)","East Asian","CJK",false,"世界是一個非常美麗的地方","🇹🇼","#ec4899"],
+      ["vi","Vietnamese","Tiếng Việt","East Asian","Latin",false,"thế giới là một nơi rất đẹp","🇻🇳","#ec4899"],
+      ["th","Thai","ไทย","East Asian","Thai",false,"โลกเป็นสถานที่ที่สวยงามมาก","🇹🇭","#ef4444"],
+      ["id","Indonesian","Bahasa Indonesia","East Asian","Latin",false,"dunia adalah tempat yang sangat indah","🇮🇩","#ec4899"],
+      ["ms","Malay","Bahasa Melayu","East Asian","Latin",false,"dunia adalah tempat yang sangat indah","🇲🇾","#ec4899"],
+      ["tl","Tagalog","Tagalog","East Asian","Latin",false,"ang mundo ay isang napakagandang lugar","🇵🇭","#ec4899"],
+      ["my","Burmese","မြန်မာစာ","East Asian","Myanmar",false,"ကမ္ဘာကြီးသည် အလွန်လှပသောနေရာဖြစ်သည်","🇲🇲","#94a3b8"],
+      ["km","Khmer","ភាសាខ្មែរ","East Asian","Khmer",false,"ពិភពលោកគឺជាកន្លែងដ៏ស្រស់ស្អាត","🇰🇭","#94a3b8"],
+      ["lo","Lao","ພາສາລາວ","East Asian","Lao",false,"ໂລກແມ່ນບ່ອນທີ່ງາມຫຼາຍ","🇱🇦","#94a3b8"],
+      ["mn","Mongolian","Монгол","East Asian","Cyrillic",false,"дэлхий ертөнц маш үзэсгэлэнтэй","🇲🇳","#a855f7"],
+      ["jv","Javanese","Basa Jawa","East Asian","Latin",false,"dunya iku papan kang endah banget","🇮🇩","#ec4899"],
+
+      ["ar","Arabic","العربية","Middle Eastern","Arabic",true,"العالم مكان جميل جداً وحافل بالعجائب","🇸🇦","#06b6d4"],
+      ["he","Hebrew","עברית","Middle Eastern","Hebrew",true,"העולם הוא מקום יפהפה מאוד","🇮🇱","#22d3ee"],
+      ["fa","Persian","فارسی","Middle Eastern","Arabic",true,"جهان جای بسیار زیبایی است","🇮🇷","#06b6d4"],
+      ["sw","Swahili","Kiswahili","Middle Eastern","Latin",false,"dunia ni mahali pazuri sana","🇰🇪","#06b6d4"],
+      ["am","Amharic","አማርኛ","Middle Eastern","Ethiopic",false,"ዓለም በጣም ቆንጆ ቦታ ናት","🇪🇹","#d946ef"],
+      ["ha","Hausa","Hausa","Middle Eastern","Latin",false,"duniya wuri ne mai kyau sosai","🇳🇬","#06b6d4"],
+      ["yo","Yoruba","Yorùbá","Middle Eastern","Latin",false,"aiye jẹ ibi ti o lẹwa pupọ","🇳🇬","#06b6d4"],
+      ["ig","Igbo","Asụsụ Igbo","Middle Eastern","Latin",false,"ụwa bụ ebe mara mma nke ukwuu","🇳🇬","#06b6d4"],
+      ["zu","Zulu","isiZulu","Middle Eastern","Latin",false,"umhlaba indawo enhle kakhulu","🇿🇦","#06b6d4"],
+      ["xh","Xhosa","isiXhosa","Middle Eastern","Latin",false,"ihlathi lihle kakhulu","🇿🇦","#06b6d4"],
+      ["so","Somali","Soomaali","Middle Eastern","Latin",false,"dunidu waa meel aad u qurux badan","🇸🇴","#06b6d4"],
+      ["mg","Malagasy","Malagasy","Middle Eastern","Latin",false,"ny tany dia toerana tsara tarehy","🇲🇬","#06b6d4"],
+      ["af","Afrikaans","Afrikaans","Middle Eastern","Latin",false,"die wêreld is 'n baie mooi plek","🇿🇦","#06b6d4"],
+      ["ti","Tigrinya","ትግርኛ","Middle Eastern","Ethiopic",false,"ዓለም ጽቡቕ ቦታ እያ","🇪🇷","#d946ef"],
+      ["rw","Kinyarwanda","Ikinyarwanda","Middle Eastern","Latin",false,"isi ni ahantu heza cyane","🇷🇼","#06b6d4"],
+      ["om","Oromo","Afaan Oromoo","Middle Eastern","Latin",false,"duniyaan bakka baay'ee bareedaadha","🇪🇹","#06b6d4"],
+
+      ["en","English","English","European","Latin",false,"the quick brown fox jumps over the lazy dog","🇺🇸","#a855f7"],
+      ["es","Spanish","Español","European","Latin",false,"el veloz zorro marrón salta sobre el perro","🇪🇸","#a855f7"],
+      ["fr","French","Français","European","Latin",false,"le rapide renard brun saute par dessus","🇫🇷","#a855f7"],
+      ["de","German","Deutsch","European","Latin",false,"der schnelle braune fuchs springt über","🇩🇪","#a855f7"],
+      ["it","Italian","Italiano","European","Latin",false,"la veloce volpe bruna salta sopra il cane","🇮🇹","#a855f7"],
+      ["ru","Russian","Русский","European","Cyrillic",false,"съешь же ещё этих мягких французских булок","🇷🇺","#a855f7"],
+      ["pt","Portuguese","Português","European","Latin",false,"a rápida raposa marrom salta sobre o cão","🇵🇹","#a855f7"],
+      ["nl","Dutch","Nederlands","European","Latin",false,"de snelle bruine vos springt over de hond","🇳🇱","#a855f7"],
+      ["pl","Polish","Polski","European","Latin",false,"szybki brązowy lis przeskakuje psa","🇵🇱","#a855f7"],
+      ["uk","Ukrainian","Українська","European","Cyrillic",false,"світ це дуже гарне місце","🇺🇦","#a855f7"],
+      ["sv","Swedish","Svenska","European","Latin",false,"den snabba bruna räven hoppar över hunden","🇸🇪","#a855f7"],
+      ["no","Norwegian","Norsk","European","Latin",false,"den raske brune reven hopper over hunden","🇳🇴","#a855f7"],
+      ["da","Danish","Dansk","European","Latin",false,"den hurtige brune ræv hopper over hunden","🇩🇰","#a855f7"],
+      ["fi","Finnish","Suomi","European","Latin",false,"nopeus ruskea kettu hyppää koiran yli","🇫🇮","#a855f7"],
+      ["el","Greek","Ελληνικά","European","Greek",false,"η γρηγορη καφε αλεπου πηδα πανω απο το σκυλο","🇬🇷","#84cc16"],
+      ["cs","Czech","Čeština","European","Latin",false,"rychlá hnědá liška skáče přes psa","🇨🇿","#a855f7"],
+      ["ro","Romanian","Română","European","Latin",false,"vulpea maro rapidă sare peste câinele leneș","🇷🇴","#a855f7"],
+      ["hu","Hungarian","Magyar","European","Latin",false,"a gyors barna róka átugorja a kutyát","🇭🇺","#a855f7"],
+      ["sk","Slovak","Slovenčina","European","Latin",false,"rýchla hnedá líška skáče cez psa","🇸🇰","#a855f7"],
+      ["bg","Bulgarian","Български","European","Cyrillic",false,"бързата кафява лисица скача над кучето","🇧🇬","#a855f7"],
+      ["sr","Serbian","Српски","European","Cyrillic",false,"брза смеђа лисица скаче преко пса","🇷🇸","#a855f7"],
+      ["hr","Croatian","Hrvatski","European","Latin",false,"brza smeđa lisica skače preko psa","🇭🇷","#a855f7"],
+      ["bs","Bosnian","Bosanski","European","Latin",false,"brza smeđa lisica skače preko psa","🇧🇦","#a855f7"],
+      ["sq","Albanian","Shqip","European","Latin",false,"bota është shumë e bukur","🇦🇱","#a855f7"],
+      ["lv","Latvian","Latviešu","European","Latin",false,"pasaule ir ļoti skaista","🇱🇻","#a855f7"],
+      ["lt","Lithuanian","Lietuvių","European","Latin",false,"pasaulis yra labai gražus","🇱🇹","#a855f7"],
+      ["et","Estonian","Eesti","European","Latin",false,"maailm on väga kaunis","🇪🇪","#a855f7"],
+      ["sl","Slovenian","Slovenščina","European","Latin",false,"svet je zelo lep kraj","🇸🇮","#a855f7"],
+      ["mk","Macedonian","Македонски","European","Cyrillic",false,"светот е многу убав","🇲🇰","#a855f7"],
+      ["be","Belarusian","Беларуская","European","Cyrillic",false,"свет вельмі прыгожы","🇧🇾","#a855f7"],
+      ["is","Icelandic","Íslenska","European","Latin",false,"heimurinn er mjög fallegur","🇮🇸","#a855f7"],
+      ["fo","Faroese","Føroyskt","European","Latin",false,"heimurin er mjög fagurhur","🇫🇴","#a855f7"],
+      ["mt","Maltese","Malti","European","Latin",false,"id-dinja hija sabiha hafna","🇲🇹","#a855f7"],
+      ["lb","Luxembourgish","Lëtzebuergesch","European","Latin",false,"d'welt ass ganz schéin","🇱🇺","#a855f7"],
+      ["ka","Georgian","ქართული","European","Georgian",false,"სამყარო ძალიან ლამაზი ადგილია","🇬🇪","#a855f7"],
+      ["hy","Armenian","Հայերեն","European","Armenian",false,"աշխարհը շատ գեղեցիկ վայր է","🇦🇲","#a855f7"],
+      ["az","Azerbaijani","Azərbaycan","European","Latin",false,"dünya çox gözəldir","🇦🇿","#a855f7"],
+      ["tr","Turkish","Türkçe","European","Latin",false,"hızlı kahverengi tilki atlar","🇹🇷","#a855f7"],
+
+      ["qu","Quechua","Runasimi","Americas","Latin",false,"allpa muru sumaq kachkan","🌎","#22d3ee"],
+      ["nah","Nahuatl","Nāhuatl","Americas","Latin",false,"in tlaltipac ye mochi necia","🌎","#22d3ee"],
+      ["gn","Guaraní","Avañe'ẽ","Americas","Latin",false,"ko yvoty heẽ ha porã","🌍","#22d3ee"],
+      ["ay","Aymara","Aymar aru","Americas","Latin",false,"aka pachana suma miraña","🌎","#22d3ee"],
+      ["haw","Hawaiian","ʻŌlelo Hawaiʻi","Americas","Latin",false,"nani ko hawaii nei moku","🌺","#22d3ee"],
+      ["mi","Māori","Te Reo Māori","Americas","Latin",false,"ko tênei ao e nui ana","🇳🇿","#22d3ee"],
+      ["sm","Samoan","Gagana Samoa","Americas","Latin",false,"o le lalolagi e matagofie","🇼🇸","#22d3ee"],
+      ["chr","Cherokee","ᏣᎳᎩ","Americas","Cherokee",false,"ᎡᎶᎯ ᏣᎳᎩ ᎠᏂᏴᏫᏯ","🌎","#22d3ee"],
+
+      ["kk","Kazakh","Қазақша","Central Asian","Cyrillic",false,"дүние жүзі өте сұлу","🇰🇿","#84cc16"],
+      ["uz","Uzbek","O'zbek","Central Asian","Latin",false,"dunyo juda chiroyli","🇺🇿","#84cc16"],
+      ["ky","Kyrgyz","Кыргызча","Central Asian","Cyrillic",false,"дүйнө абдан сонун","🇰🇬","#84cc16"],
+      ["tg","Tajik","Тоҷикӣ","Central Asian","Cyrillic",false,"ҷаҳон хеле зебост","🇹🇯","#84cc16"],
+      ["tk","Turkmen","Türkmen","Central Asian","Latin",false,"dünýä gaty owadandyr","🇹🇲","#84cc16"],
+      ["ug","Uyghur","ئۇيغۇر","Central Asian","Arabic",true,"دۇنيا ناھايىتى گۈزەل جاي","🇨🇳","#84cc16"],
+      ["prs","Dari","دری","Central Asian","Arabic",true,"جهان جای بسیار زیبایی است","🇦🇫","#84cc16"],
+      ["xal","Kalmyk","Хальмг","Central Asian","Cyrillic",false,"делкән сәәхн дала","🇷🇺","#84cc16"],
+    ];
+
+    /* ═══════════════════════════════════════════════════════════════
+       4-LAYER MODIFIER SCRIPT KEYMAPS
+       [Unshifted], [Shifted], [Alt Right (AltGr)], [Alt Right + Shift]
+    ═══════════════════════════════════════════════════════════════ */
+    const SCRIPT_KEYMAPS = {
+      "Latin": null,
+
+      "Malayalam": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ൌ", KeyW: "ൈ", KeyE: "ാ", KeyR: "ീ", KeyT: "ൂ", KeyY: "ബ", KeyU: "ഹ", KeyI: "ഗ", KeyO: "ദ", KeyP: "ജ",
+          BracketLeft: "ള", BracketRight: "ഥ", Backslash: "ൊ",
+          KeyA: "ൊ", KeyS: "െ", KeyD: "്", KeyF: "ി", KeyG: "ു", KeyH: "പ", KeyJ: "ര", KeyK: "ക", KeyL: "ത",
+          Semicolon: "ച", Quote: "ട",
+          KeyZ: "ഴ", KeyX: "ം", KeyC: "മ", KeyV: "ന", KeyB: "വ", KeyN: "ല", KeyM: "സ",
+          Comma: "യ", Period: "റ", Slash: "ണ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ഔ", KeyW: "ഐ", KeyE: "ആ", KeyR: "ഈ", KeyT: "ഊ", KeyY: "ഭ", KeyU: "ങ", KeyI: "ഘ", KeyO: "ധ", KeyP: "ഝ",
+          BracketLeft: "ഢ", BracketRight: "ഞ", Backslash: "ഓ",
+          KeyA: "ഒ", KeyS: "എ", KeyD: "അ", KeyF: "ഇ", KeyG: "ഉ", KeyH: "ഫ", KeyJ: "റ", KeyK: "ഖ", KeyL: "ഥ",
+          Semicolon: "ഛ", Quote: "ഠ",
+          KeyZ: "ഺ", KeyX: "ഃ", KeyC: "ണ", KeyV: "ന", KeyB: "വ", KeyN: "ള", KeyM: "ശ",
+          Comma: "യ", Period: "ൎ", Slash: "ഷ",
+        },
+        altGr: {
+          Backquote: "`", Digit1: "൧", Digit2: "൨", Digit3: "൩", Digit4: "൪", Digit5: "൫",
+          Digit6: "൬", Digit7: "൭", Digit8: "൮", Digit9: "൯", Digit0: "൦", Minus: "-", Equal: "=",
+          KeyQ: "൴", KeyW: "൵", KeyE: "ൎ", KeyR: "൏", KeyT: "ൿ", KeyY: "൯", KeyU: "൮", KeyI: "൭", KeyO: "൬", KeyP: "൫",
+          BracketLeft: "‹", BracketRight: "›", Backslash: "|",
+          KeyA: "൧", KeyS: "൨", KeyD: "൩", KeyF: "൪", KeyG: "൦", KeyH: "൰", KeyJ: "൱", KeyK: "൲", KeyL: "൳",
+          Semicolon: "¶", Quote: "’",
+          KeyZ: "൹", KeyX: "ൔ", KeyC: "ൕ", KeyV: "ൖ", KeyB: "ൗ", KeyN: "൘", KeyM: "൙",
+          Comma: "«", Period: "»", Slash: "¿",
+        },
+        altGrShift: {
+          Backquote: "~", Digit1: "𑌠", Digit2: "𑌡", Digit3: "𑌢", Digit4: "𑌣", Digit5: "𑌤",
+          Digit6: "𑌥", Digit7: "𑌦", Digit8: "𑌧", Digit9: "𑌨", Digit0: "𑌩", Minus: "—", Equal: "±",
+          KeyQ: "𑌀", KeyW: "𑌁", KeyE: "𑌂", KeyR: "𑌃", KeyT: "𑌅", KeyY: "𑌆", KeyU: "𑌇", KeyI: "𑌈", KeyO: "𑌉", KeyP: "𑌊",
+          BracketLeft: "«", BracketRight: "»", Backslash: "¦",
+          KeyA: "𑌋", KeyS: "𑌌", KeyD: "𑌏", KeyF: "𑌐", KeyG: "𑌔", KeyH: "𑌕", KeyJ: "𑌖", KeyK: "𑌗", KeyL: "𑌘",
+          Semicolon: "§", Quote: "”",
+          KeyZ: "𑌙", KeyX: "𑌚", KeyC: "𑌛", KeyV: "𑌜", KeyB: "𑌝", KeyN: "𑌞", KeyM: "𑌟",
+          Comma: "<", Period: ">", Slash: "?",
+        }
+      },
+
+      "Devanagari": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ौ", KeyW: "ै", KeyE: "ा", KeyR: "ी", KeyT: "ू", KeyY: "ब", KeyU: "ह", KeyI: "ग", KeyO: "द", KeyP: "ज",
+          BracketLeft: "ड", BracketRight: "़", Backslash: "ॉ",
+          KeyA: "ो", KeyS: "े", KeyD: "्", KeyF: "ि", KeyG: "ु", KeyH: "प", KeyJ: "र", KeyK: "क", KeyL: "त",
+          Semicolon: "च", Quote: "ट",
+          KeyZ: "ॉ", KeyX: "ं", KeyC: "म", KeyV: "न", KeyB: "व", KeyN: "ल", KeyM: "स",
+          Comma: "य", Period: "़", Slash: "ध",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "औ", KeyW: "ऐ", KeyE: "आ", KeyR: "ई", KeyT: "ऊ", KeyY: "भ", KeyU: "ङ", KeyI: "घ", KeyO: "ध", KeyP: "झ",
+          BracketLeft: "ढ", BracketRight: "ञ", Backslash: "ऑ",
+          KeyA: "ओ", KeyS: "ए", KeyD: "अ", KeyF: "इ", KeyG: "उ", KeyH: "फ", KeyJ: "ऱ", KeyK: "ख", KeyL: "थ",
+          Semicolon: "छ", Quote: "ठ",
+          KeyZ: "ऑ", KeyX: "ः", KeyC: "ण", KeyV: "न", KeyB: "व", KeyN: "ळ", KeyM: "श",
+          Comma: "य़", Period: "ज्ञ", Slash: "ष",
+        },
+        altGr: {
+          Digit1: "१", Digit2: "२", Digit3: "३", Digit4: "४", Digit5: "५",
+          Digit6: "६", Digit7: "७", Digit8: "८", Digit9: "९", Digit0: "०",
+          KeyQ: "ॐ", KeyW: "ऍ", KeyE: "ॲ", KeyR: "ऋ", KeyT: "ॠ", KeyY: "ॵ", KeyU: "ॶ", KeyI: "ॷ", KeyO: "ॸ", KeyP: "ॹ",
+        },
+        altGrShift: {
+          Digit1: "₹", Digit2: "ॺ", Digit3: "ॻ", Digit4: "ॼ", Digit5: "ॽ",
+          Digit6: "ॾ", Digit7: "ॿ", Digit8: "ॴ", Digit9: "॥", Digit0: "।",
+        }
+      },
+
+      "Tamil": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ஔ", KeyW: "ஐ", KeyE: "ா", KeyR: "ீ", KeyT: "ூ", KeyY: "ப", KeyU: "ஹ", KeyI: "க", KeyO: "த", KeyP: "ஜ",
+          BracketLeft: "ட", BracketRight: "ஞ", Backslash: "ொ",
+          KeyA: "ொ", KeyS: "െ", KeyD: "്", KeyF: "ி", KeyG: "ു", KeyH: "ப", KeyJ: "ர", KeyK: "க", KeyL: "த",
+          Semicolon: "ச", Quote: "ட",
+          KeyZ: "ழ", KeyX: "ம்", KeyC: "ம", KeyV: "ந", KeyB: "வ", KeyN: "ல", KeyM: "ஸ",
+          Comma: "ய", Period: "ற", Slash: "ன",
+        },
+        shifted: {
+          Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")",
+          KeyQ: "ஔ", KeyW: "ஐ", KeyE: "ஆ", KeyR: "ஈ", KeyT: "ஊ", KeyY: "ப", KeyU: "ஹ", KeyI: "க", KeyO: "த", KeyP: "ஜ",
+          KeyA: "ஒ", KeyS: "எ", KeyD: "அ", KeyF: "இ", KeyG: "உ", KeyH: "ஃ", KeyJ: "ர", KeyK: "க", KeyL: "த",
+          KeyZ: "ழ", KeyX: "ஃ", KeyC: "ம", KeyV: "ந", KeyB: "வ", KeyN: "ள", KeyM: "ஶ",
+        },
+        altGr: {
+          Digit1: "௧", Digit2: "௨", Digit3: "௩", Digit4: "௪", Digit5: "௫",
+          Digit6: "௬", Digit7: "௭", Digit8: "௮", Digit9: "௯", Digit0: "௦",
+          KeyE: "௰", KeyR: "௱", KeyT: "௲", KeyY: "௳", KeyU: "௴", KeyI: "௵",
+        },
+        altGrShift: {
+          Digit1: "௶", Digit2: "௷", Digit3: "௸", Digit4: "௹", Digit5: "௺",
+        }
+      },
+
+      "Telugu": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ౌ", KeyW: "ై", KeyE: "ా", KeyR: "ీ", KeyT: "ూ", KeyY: "బ", KeyU: "హ", KeyI: "గ", KeyO: "ద", KeyP: "జ",
+          BracketLeft: "డ", BracketRight: "ఢ", Backslash: "ొ",
+          KeyA: "ొ", KeyS: "ె", KeyD: "్", KeyF: "ి", KeyG: "ు", KeyH: "ప", KeyJ: "ర", KeyK: "క", KeyL: "త",
+          Semicolon: "చ", Quote: "ట",
+          KeyZ: "ఱ", KeyX: "ం", KeyC: "మ", KeyV: "న", KeyB: "వ", KeyN: "ల", KeyM: "స",
+          Comma: "య", Period: "ళ", Slash: "జ్ఞ",
+        },
+        shifted: {
+          Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")",
+          KeyQ: "ఔ", KeyW: "ఐ", KeyE: "ఆ", KeyR: "ఈ", KeyT: "ఊ", KeyY: "భ", KeyU: "ఙ", KeyI: "ఘ", KeyO: "ధ", KeyP: "ఝ",
+          KeyA: "ఒ", KeyS: "ఎ", KeyD: "అ", KeyF: "ఇ", KeyG: "ఉ", KeyH: "ఫ", KeyJ: "ఱ", KeyK: "ఖ", KeyL: "థ",
+        },
+        altGr: {
+          Digit1: "౧", Digit2: "౨", Digit3: "౩", Digit4: "౪", Digit5: "౫",
+          Digit6: "౬", Digit7: "౭", Digit8: "౮", Digit9: "౯", Digit0: "౦",
+        },
+        altGrShift: {
+          Digit1: "౸", Digit2: "౹", Digit3: "౺", Digit4: "౻", Digit5: "౼",
+        }
+      },
+
+      "Arabic": {
+        unshifted: {
+          Backquote: "ذ", Digit1: "١", Digit2: "٢", Digit3: "٣", Digit4: "٤", Digit5: "٥",
+          Digit6: "٦", Digit7: "٧", Digit8: "٨", Digit9: "٩", Digit0: "٠", Minus: "-", Equal: "=",
+          KeyQ: "ض", KeyW: "ص", KeyE: "ث", KeyR: "ق", KeyT: "ف", KeyY: "غ", KeyU: "ع", KeyI: "ه", KeyO: "خ", KeyP: "ح",
+          BracketLeft: "ج", BracketRight: "د", Backslash: "\\",
+          KeyA: "ش", KeyS: "س", KeyD: "ي", KeyF: "ب", KeyG: "ل", KeyH: "ا", KeyJ: "ت", KeyK: "ن", KeyL: "م",
+          Semicolon: "ك", Quote: "ط",
+          KeyZ: "ئ", KeyX: "ء", KeyC: "ؤ", KeyV: "ر", KeyB: "لا", KeyN: "ى", KeyM: "ة",
+          Comma: "و", Period: "ز", Slash: "ظ",
+        },
+        shifted: {
+          Backquote: "ّ", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: ")", Digit0: "(", Minus: "_", Equal: "+",
+          KeyQ: "َ", KeyW: "ً", KeyE: "ُ", KeyR: "ٌ", KeyT: "لإ", KeyY: "إ", KeyU: "‘", KeyI: "÷", KeyO: "×", KeyP: "؛",
+          BracketLeft: "<", BracketRight: ">", Backslash: "|",
+          KeyA: "ِ", KeyS: "ٍ", KeyD: "ْ", KeyF: "لأ", KeyG: "أ", KeyH: "ـ", KeyJ: "ـ", KeyK: "،", KeyL: "/",
+          Semicolon: ":", Quote: "\"",
+          KeyZ: "~", KeyX: "ْ", KeyC: "{" , KeyV: "}", KeyB: "لآ", KeyN: "آ", KeyM: "’",
+          Comma: ",", Period: ".", Slash: "؟",
+        },
+        altGr: {
+          Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0",
+          KeyQ: "ﷺ", KeyW: "ﷻ", KeyE: "﷼", KeyR: "€", KeyT: "₺",
+        },
+        altGrShift: {
+          Digit1: "١", Digit2: "٢", Digit3: "٣", Digit4: "٤", Digit5: "٥",
+        }
+      },
+
+      "Cyrillic": {
+        unshifted: {
+          Backquote: "ё", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "й", KeyW: "ц", KeyE: "у", KeyR: "к", KeyT: "е", KeyY: "н", KeyU: "г", KeyI: "ш", KeyO: "щ", KeyP: "з",
+          BracketLeft: "х", BracketRight: "ъ", Backslash: "\\",
+          KeyA: "ф", KeyS: "ы", KeyD: "в", KeyF: "а", KeyG: "п", KeyH: "р", KeyJ: "о", KeyK: "л", KeyL: "д",
+          Semicolon: "ж", Quote: "э",
+          KeyZ: "я", KeyX: "ч", KeyC: "с", KeyV: "м", KeyB: "и", KeyN: "т", KeyM: "ь",
+          Comma: "б", Period: "ю", Slash: ".",
+        },
+        shifted: {
+          Backquote: "Ё", Digit1: "!", Digit2: "\"", Digit3: "№", Digit4: ";", Digit5: "%",
+          Digit6: ":", Digit7: "?", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "Й", KeyW: "Ц", KeyE: "У", KeyR: "К", KeyT: "Е", KeyY: "Н", KeyU: "Г", KeyI: "Ш", KeyO: "Щ", KeyP: "З",
+          BracketLeft: "Х", BracketRight: "Ъ", Backslash: "/",
+          KeyA: "Ф", KeyS: "Ы", KeyD: "В", KeyF: "А", KeyG: "П", KeyH: "Р", KeyJ: "О", KeyK: "Л", KeyL: "Д",
+          Semicolon: "Ж", Quote: "Э",
+          KeyZ: "Я", KeyX: "Ч", KeyC: "С", KeyV: "М", KeyB: "И", KeyN: "Т", KeyM: "Ь",
+          Comma: "Б", Period: "Ю", Slash: ",",
+        },
+        altGr: { KeyQ: "«", KeyW: "»", KeyE: "€", KeyR: "®", KeyT: "™", KeyY: "¥", KeyU: "§" },
+        altGrShift: { KeyQ: "‹", KeyW: "›", KeyE: "£", KeyR: "©" }
+      },
+
+      "Bengali": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ৌ", KeyW: "ৈ", KeyE: "া", KeyR: "ী", KeyT: "ূ", KeyY: "ব", KeyU: "হ", KeyI: "গ", KeyO: "দ", KeyP: "জ",
+          BracketLeft: "ড", BracketRight: "ঢ", Backslash: "়",
+          KeyA: "ো", KeyS: "ে", KeyD: "্", KeyF: "ি", KeyG: "ু", KeyH: "প", KeyJ: "র", KeyK: "ক", KeyL: "ত",
+          Semicolon: "চ", Quote: "ট",
+          KeyZ: "য", KeyX: "ং", KeyC: "ম", KeyV: "ন", KeyB: "ভ", KeyN: "ল", KeyM: "স",
+          Comma: "য়", Period: "ড়", Slash: "ঢ়",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ঔ", KeyW: "ঐ", KeyE: "আ", KeyR: "ঈ", KeyT: "ঊ", KeyY: "ভ", KeyU: "ঙ", KeyI: "ঘ", KeyO: "ধ", KeyP: "ঝ",
+          BracketLeft: "ঢ", BracketRight: "ঞ", Backslash: "ঢ়",
+          KeyA: "ও", KeyS: "এ", KeyD: "অ", KeyF: "ই", KeyG: "উ", KeyH: "ফ", KeyJ: "ড়", KeyK: "খ", KeyL: "থ",
+          Semicolon: "ছ", Quote: "ঠ",
+          KeyZ: "য়", KeyX: "ঃ", KeyC: "ণ", KeyV: "ন", KeyB: "ভ", KeyN: "ল", KeyM: "শ",
+          Comma: "য", Period: "র্", Slash: "ষ",
+        },
+        altGr: {
+          Digit1: "১", Digit2: "২", Digit3: "৩", Digit4: "৪", Digit5: "৫",
+          Digit6: "৬", Digit7: "৭", Digit8: "৮", Digit9: "৯", Digit0: "০",
+        },
+        altGrShift: { Digit1: "৴", Digit2: "৵", Digit3: "৶", Digit4: "৷", Digit5: "৸" }
+      },
+
+      "Kannada": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ೌ", KeyW: "ೈ", KeyE: "ಾ", KeyR: "ೀ", KeyT: "ೂ", KeyY: "ಬ", KeyU: "ಹ", KeyI: "ಗ", KeyO: "ದ", KeyP: "ಜ",
+          BracketLeft: "ಡ", BracketRight: "ಢ", Backslash: "ೊ",
+          KeyA: "ೊ", KeyS: "ೆ", KeyD: "್", KeyF: "ಿ", KeyG: "ು", KeyH: "ಪ", KeyJ: "ರ", KeyK: "ಕ", KeyL: "ತ",
+          Semicolon: "ಚ", Quote: "ಟ",
+          KeyZ: "ಱ", KeyX: "ಂ", KeyC: "ಮ", KeyV: "ನ", KeyB: "ವ", KeyN: "ಲ", KeyM: "ಸ",
+          Comma: "ಯ", Period: "ಳ", Slash: "ಜ್ಞ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ಔ", KeyW: "ಐ", KeyE: "ಆ", KeyR: "ಈ", KeyT: "ಊ", KeyY: "ಭ", KeyU: "ಙ", KeyI: "ಘ", KeyO: "ಧ", KeyP: "ಝ",
+          BracketLeft: "ಢ", BracketRight: "ಞ", Backslash: "ಒ",
+          KeyA: "ಒ", KeyS: "ಎ", KeyD: "ಅ", KeyF: "ಇ", KeyG: "ಉ", KeyH: "ಫ", KeyJ: "ಱ", KeyK: "ಖ", KeyL: "ಥ",
+          Semicolon: "ಛ", Quote: "ಠ",
+          KeyZ: "ಯ", KeyX: "ಃ", KeyC: "ಣ", KeyV: "ನ", KeyB: "ವ", KeyN: "ಲ", KeyM: "ಶ",
+          Comma: "ಯ", Period: "ೞ", Slash: "ಷ",
+        },
+        altGr: {
+          Digit1: "೧", Digit2: "೨", Digit3: "೩", Digit4: "೪", Digit5: "೫",
+          Digit6: "೬", Digit7: "೭", Digit8: "೮", Digit9: "೯", Digit0: "೦",
+        },
+        altGrShift: { Digit1: "ೱ", Digit2: "ೲ" }
+      },
+
+      "Gujarati": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ૌ", KeyW: "ૈ", KeyE: "ા", KeyR: "ી", KeyT: "ૂ", KeyY: "બ", KeyU: "હ", KeyI: "ગ", KeyO: "દ", KeyP: "જ",
+          BracketLeft: "ડ", BracketRight: "ઢ", Backslash: "અ",
+          KeyA: "ો", KeyS: "ે", KeyD: "્", KeyF: "િ", KeyG: "ુ", KeyH: "પ", KeyJ: "ર", KeyK: "ક", KeyL: "ત",
+          Semicolon: "ચ", Quote: "ટ",
+          KeyZ: "જ્ઞ", KeyX: "ં", KeyC: "મ", KeyV: "ન", KeyB: "વ", KeyN: "લ", KeyM: "સ",
+          Comma: "ય", Period: "ળ", Slash: "ષ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ઔ", KeyW: "ઐ", KeyE: "આ", KeyR: "ઈ", KeyT: "ઊ", KeyY: "ભ", KeyU: "ઙ", KeyI: "ઘ", KeyO: "ધ", KeyP: "ઝ",
+          BracketLeft: "ઢ", BracketRight: "ઞ", Backslash: "ઑ",
+          KeyA: "ઓ", KeyS: "એ", KeyD: "અ", KeyF: "ઇ", KeyG: "ઉ", KeyH: "ફ", KeyJ: "઱", KeyK: "ખ", KeyL: "થ",
+          Semicolon: "છ", Quote: "ઠ",
+          KeyZ: "ય", KeyX: "ઃ", KeyC: "ણ", KeyV: "ન", KeyB: "વ", KeyN: "લ", KeyM: "શ",
+          Comma: "ય", Period: "ળ", Slash: "ષ",
+        },
+        altGr: {
+          Digit1: "૧", Digit2: "૨", Digit3: "૩", Digit4: "૪", Digit5: "૫",
+          Digit6: "૬", Digit7: "૭", Digit8: "૮", Digit9: "૯", Digit0: "૦",
+        },
+        altGrShift: { Digit1: "ૐ" }
+      },
+
+      "Gurmukhi": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ੌ", KeyW: "ੈ", KeyE: "ਾ", KeyR: "ੀ", KeyT: "ੂ", KeyY: "ਬ", KeyU: "ਹ", KeyI: "ਗ", KeyO: "ਦ", KeyP: "ਜ",
+          BracketLeft: "ਡ", BracketRight: "ਢ", Backslash: "਼",
+          KeyA: "ੋ", KeyS: "ੇ", KeyD: "੍", KeyF: "ਿ", KeyG: "ੁ", KeyH: "ਪ", KeyJ: "ਰ", KeyK: "ਕ", KeyL: "ਤ",
+          Semicolon: "ਚ", Quote: "ਟ",
+          KeyZ: "ਜ਼", KeyX: "ਂ", KeyC: "ਮ", KeyV: "ਨ", KeyB: "ਵ", KeyN: "ਲ", KeyM: "ਸ",
+          Comma: "ਯ", Period: "ੜ", Slash: "ਖ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ਔ", KeyW: "ਐ", KeyE: "ਆ", KeyR: "ਈ", KeyT: "ਊ", KeyY: "ਭ", KeyU: "ਙ", KeyI: "ਘ", KeyO: "ਧ", KeyP: "ਝ",
+          BracketLeft: "ਢ", BracketRight: "ਞ", Backslash: "ੲ",
+          KeyA: "ਓ", KeyS: "ਏ", KeyD: "ਅ", KeyF: "ਇ", KeyG: "ਉ", KeyH: "ਫ", KeyJ: "ੜ", KeyK: "ਖ", KeyL: "ਥ",
+          Semicolon: "ਛ", Quote: "ਠ",
+          KeyZ: "ਯ", KeyX: "ਃ", KeyC: "ਣ", KeyV: "ਨ", KeyB: "ਵ", KeyN: "ਲ", KeyM: "ਸ਼",
+          Comma: "ਯ", Period: "ਲ਼", Slash: "ਖ਼",
+        },
+        altGr: {
+          Digit1: "੧", Digit2: "੨", Digit3: "੩", Digit4: "੪", Digit5: "੫",
+          Digit6: "੬", Digit7: "੭", Digit8: "੮", Digit9: "੯", Digit0: "੦",
+        },
+        altGrShift: { Digit1: "ੴ", Digit2: "ੵ" }
+      },
+
+      "Odia": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ୌ", KeyW: "ୈ", KeyE: "ା", KeyR: "ୀ", KeyT: "ୂ", KeyY: "ବ", KeyU: "ହ", KeyI: "ଗ", KeyO: "ଦ", KeyP: "ଜ",
+          BracketLeft: "ଡ", BracketRight: "ଢ", Backslash: "ଅ",
+          KeyA: "ୋ", KeyS: "େ", KeyD: "୍", KeyF: "ି", KeyG: "ୁ", KeyH: "ପ", KeyJ: "ର", KeyK: "କ", KeyL: "ତ",
+          Semicolon: "ଚ", Quote: "ଟ",
+          KeyZ: "ଯ", KeyX: "ଂ", KeyC: "ମ", KeyV: "ନ", KeyB: "ଵ", KeyN: "ଲ", KeyM: "ସ",
+          Comma: "ୟ", Period: "ଳ", Slash: "ଷ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ଔ", KeyW: "ଐ", KeyE: "ଆ", KeyR: "ଈ", KeyT: "ଊ", KeyY: "ଭ", KeyU: "ଙ", KeyI: "ଘ", KeyO: "ଧ", KeyP: "ଝ",
+          BracketLeft: "ଢ", BracketRight: "ଞ", Backslash: "଑",
+          KeyA: "ଓ", KeyS: "ଏ", KeyD: "ଅ", KeyF: "ଇ", KeyG: "ଉ", KeyH: "ଫ", KeyJ: "ଡ଼", KeyK: "ଖ", KeyL: "ଥ",
+          Semicolon: "ଛ", Quote: "ଠ",
+          KeyZ: "ୟ", KeyX: "ଃ", KeyC: "ଣ", KeyV: "ନ", KeyB: "ଵ", KeyN: "ଲ", KeyM: "ଶ",
+          Comma: "ଯ", Period: "ଳ", Slash: "ଷ",
+        },
+        altGr: {
+          Digit1: "୧", Digit2: "୨", Digit3: "୩", Digit4: "୪", Digit5: "୫",
+          Digit6: "୬", Digit7: "୭", Digit8: "୮", Digit9: "୯", Digit0: "୦",
+        },
+        altGrShift: { Digit1: "୲", Digit2: "୳", Digit3: "୴", Digit4: "୵", Digit5: "୶", Digit6: "୷" }
+      },
+
+      "Sinhala": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ඳ", KeyW: "උ", KeyE: "ෙ", KeyR: "ර", KeyT: "ත", KeyY: "ය", KeyU: "ු", KeyI: "ි", KeyO: "ො", KeyP: "ප",
+          BracketLeft: "ශ", BracketRight: "ෂ", Backslash: "ඥ",
+          KeyA: "අ", KeyS: "ස", KeyD: "ද", KeyF: "ධ", KeyG: "ග", KeyH: "හ", KeyJ: "ජ", KeyK: "ක", KeyL: "ල",
+          Semicolon: "ෆ", Quote: "්",
+          KeyZ: "ණ", KeyX: "ච", KeyC: "ම", KeyV: "න", KeyB: "බ", KeyN: "ව", KeyM: "ඟ",
+          Comma: "ළ", Period: "ඞ", Slash: "එ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: "ඣ", KeyW: "ඌ", KeyE: "ේ", KeyR: "ර්", KeyT: "ථ", KeyY: "ය්", KeyU: "ූ", KeyI: "ී", KeyO: "ෝ", KeyP: "ඵ",
+          BracketLeft: "ශ්", BracketRight: "ෂ්", Backslash: "ඬ",
+          KeyA: "ආ", KeyS: "ෂ", KeyD: "ධ", KeyF: "ඳ", KeyG: "ඝ", KeyH: "හ්", KeyJ: "ඣ", KeyK: "ඛ", KeyL: "ල්",
+          Semicolon: "ෆ්", Quote: "ෘ",
+          KeyZ: "ඪ", KeyX: "ඡ", KeyC: "ම්", KeyV: "ණ්", KeyB: "භ", KeyN: "ව්", KeyM: "ච",
+          Comma: "ළු", Period: "ඍ", Slash: "ඒ",
+        },
+        altGr: {
+          Digit1: "ං", Digit2: "ඃ", Digit3: "ඤ", Digit4: "ඥ", Digit5: "ඦ",
+          Digit6: "ඩ", Digit7: "ඬ", Digit8: "ජ්", Digit9: "ඤ්", Digit0: "ඨ",
+        },
+        altGrShift: { Digit1: "ථ්", Digit2: "ඩ්", Digit3: "ඬ්", Digit4: "ඳ්", Digit5: "ඵ්" }
+      },
+
+      "Hebrew": {
+        unshifted: {
+          Backquote: ";", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "/", KeyW: "'", KeyE: "ק", KeyR: "ר", KeyT: "א", KeyY: "ט", KeyU: "ו", KeyI: "ן", KeyO: "ם", KeyP: "פ",
+          BracketLeft: "]", BracketRight: "[", Backslash: "\\",
+          KeyA: "ש", KeyS: "ד", KeyD: "ג", KeyF: "כ", KeyG: "ע", KeyH: "י", KeyJ: "ח", KeyK: "ל", KeyL: "ך",
+          Semicolon: "ף", Quote: ",",
+          KeyZ: "ז", KeyX: "ס", KeyC: "ב", KeyV: "ה", KeyB: "נ", KeyN: "מ", KeyM: "צ",
+          Comma: "ת", Period: "ץ", Slash: ".",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: ")", Digit0: "(", Minus: "_", Equal: "+",
+        }
+      },
+
+      "Greek": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: ";", KeyW: "ς", KeyE: "ε", KeyR: "ρ", KeyT: "τ", KeyY: "υ", KeyU: "θ", KeyI: "ι", KeyO: "ο", KeyP: "π",
+          BracketLeft: "[", BracketRight: "]", Backslash: "\\",
+          KeyA: "α", KeyS: "σ", KeyD: "δ", KeyF: "φ", KeyG: "γ", KeyH: "η", KeyJ: "ξ", KeyK: "κ", KeyL: "λ",
+          Semicolon: ";", Quote: "'",
+          KeyZ: "ζ", KeyX: "χ", KeyC: "ψ", KeyV: "ω", KeyB: "β", KeyN: "ν", KeyM: "μ",
+          Comma: ",", Period: ".", Slash: "/",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+          KeyQ: ":", KeyW: "ς", KeyE: "Ε", KeyR: "Ρ", KeyT: "Τ", KeyY: "Υ", KeyU: "Θ", KeyI: "Ι", KeyO: "Ο", KeyP: "Π",
+          KeyA: "Α", KeyS: "Σ", KeyD: "Δ", KeyF: "Φ", KeyG: "Γ", KeyH: "Η", KeyJ: "Ξ", KeyK: "Κ", KeyL: "Λ",
+          KeyZ: "Ζ", KeyX: "Χ", KeyC: "Ψ", KeyV: "Ω", KeyB: "Β", KeyN: "Ν", KeyM: "Μ",
+        }
+      },
+
+      "Thai": {
+        unshifted: {
+          Backquote: "ๅ", Digit1: "\"", Digit2: "+", Digit3: "๑", Digit4: "๒", Digit5: "๓",
+          Digit6: "๔", Digit7: "ู", Digit8: "๗", Digit9: "๘", Digit0: "๙", Minus: "๖", Equal: "๕",
+          KeyQ: "/", KeyW: "_", KeyE: "ภ", KeyR: "ถ", KeyT: "ุ", KeyY: "ึ", KeyU: "ค", KeyI: "ต", KeyO: "จ", KeyP: "ข",
+          BracketLeft: "ช", BracketRight: "ฅ", Backslash: "ๆ",
+          KeyA: "ฟ", KeyS: "ห", KeyD: "ก", KeyF: "ด", KeyG: "เ", KeyH: "้", KeyJ: "่", KeyK: "า", KeyL: "ส",
+          Semicolon: "ว", Quote: "ง",
+          KeyZ: "ผ", KeyX: "ป", KeyC: "แ", KeyV: "อ", KeyB: "ิ", KeyN: "ื", KeyM: "ท",
+          Comma: "ม", Period: "ใ", Slash: "ฝ",
+        },
+        shifted: {
+          Backquote: "ฯ", Digit1: "๑", Digit2: "๒", Digit3: "๓", Digit4: "๔", Digit5: "๕",
+          Digit6: "๖", Digit7: "๗", Digit8: "๘", Digit9: "๙", Digit0: "๐", Minus: "฿", Equal: "๚",
+          KeyQ: "ๅ", KeyW: "โ", KeyE: "ล", KeyR: "ร", KeyT: "น", KeyY: "ย", KeyU: "ะ", KeyI: "ั", KeyO: "ี", KeyP: "ำ",
+          BracketLeft: "ซ", BracketRight: "ฌ", Backslash: "ญ",
+          KeyA: "ฤ", KeyS: "ฆ", KeyD: "ฏ", KeyF: "โ", KeyG: "ฌ", KeyH: "็", KeyJ: "๋", KeyK: "ษ", KeyL: "ศ",
+          Semicolon: "ฮ", Quote: "ฯ",
+          KeyZ: "ฯ", KeyX: "ฬ", KeyC: "ฮ", KeyV: "ฮ", KeyB: "ะ", KeyN: "ั", KeyM: "ำ",
+          Comma: "๎", Period: "ไ", Slash: "ฦ",
+        }
+      },
+
+      "Georgian": {
+        unshifted: {
+          Backquote: "`", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ქ", KeyW: "წ", KeyE: "ე", KeyR: "რ", KeyT: "ტ", KeyY: "ყ", KeyU: "უ", KeyI: "ი", KeyO: "ო", KeyP: "პ",
+          BracketLeft: "ღ", BracketRight: "ფ", Backslash: "შ",
+          KeyA: "ა", KeyS: "ს", KeyD: "დ", KeyF: "ფ", KeyG: "გ", KeyH: "ჰ", KeyJ: "ჯ", KeyK: "კ", KeyL: "ლ",
+          Semicolon: "ჭ", Quote: "ძ",
+          KeyZ: "ძ", KeyX: "ც", KeyC: "ჩ", KeyV: "ვ", KeyB: "ბ", KeyN: "ნ", KeyM: "მ",
+          Comma: "თ", Period: "ღ", Slash: "ქ",
+        },
+        shifted: {
+          Backquote: "~", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+        }
+      },
+
+      "Armenian": {
+        unshifted: {
+          Backquote: "։", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0", Minus: "-", Equal: "=",
+          KeyQ: "ք", KeyW: "ո", KeyE: "ե", KeyR: "ռ", KeyT: "տ", KeyY: "ը", KeyU: "ւ", KeyI: "ի", KeyO: "ո", KeyP: "պ",
+          BracketLeft: "խ", BracketRight: "ծ", Backslash: "ձ",
+          KeyA: "ա", KeyS: "ս", KeyD: "դ", KeyF: "ֆ", KeyG: "գ", KeyH: "հ", KeyJ: "ջ", KeyK: "կ", KeyL: "լ",
+          Semicolon: "թ", Quote: "ր",
+          KeyZ: "զ", KeyX: "ց", KeyC: "ճ", KeyV: "վ", KeyB: "բ", KeyN: "ն", KeyM: "մ",
+          Comma: "չ", Period: "շ", Slash: "ղ",
+        },
+        shifted: {
+          Backquote: "՞", Digit1: "!", Digit2: "@", Digit3: "#", Digit4: "$", Digit5: "%",
+          Digit6: "^", Digit7: "&", Digit8: "*", Digit9: "(", Digit0: ")", Minus: "_", Equal: "+",
+        }
+      },
+
+      "Ethiopic": {
+        unshifted: {
+          KeyQ: "ቅ", KeyW: "ው", KeyE: "እ", KeyR: "ር", KeyT: "ት", KeyY: "ይ", KeyU: "ኡ", KeyI: "ኢ", KeyO: "ኦ", KeyP: "ፕ",
+          KeyA: "አ", KeyS: "ስ", KeyD: "ድ", KeyF: "ፍ", KeyG: "ግ", KeyH: "ህ", KeyJ: "ጅ", KeyK: "ክ", KeyL: "ል",
+          KeyZ: "ዝ", KeyX: "ጭ", KeyC: "ች", KeyV: "ቭ", KeyB: "ብ", KeyN: "ን", KeyM: "ም",
+        },
+        shifted: {
+          Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+          Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0",
+          KeyQ: "ቁ", KeyW: "ዉ", KeyE: "ኧ", KeyR: "ሯ", KeyT: "ቱ", KeyY: "ዩ", KeyU: "ኡ", KeyI: "ኢ", KeyO: "ኣ", KeyP: "ፕ",
+          KeyA: "አ", KeyS: "ሱ", KeyD: "ዱ", KeyF: "ፉ", KeyG: "ጉ", KeyH: "ሁ", KeyJ: "ጁ", KeyK: "ኩ", KeyL: "ሉ",
+          KeyZ: "ዙ", KeyX: "ጩ", KeyC: "ቹ", KeyV: "ቩ", KeyB: "ቡ", KeyN: "ኑ", KeyM: "ሙ",
+        }
+      }
+    };
+
+    /* ═══════════════════════════════════════════════════════════════
+       AUTO KEYMAP BUILDER — guarantees EVERY language is typable
+       Base layout (if any) + phonetic hints + deterministic fallback
+    ═══════════════════════════════════════════════════════════════ */
+    const PUNCT_CODE = { "`":"Backquote","-":"Minus","=":"Equal","[":"BracketLeft","]":"BracketRight","\\":"Backslash",";":"Semicolon","'":"Quote",",":"Comma",".":"Period","/":"Slash"," ":"Space" };
+    function codeForAscii(c) {
+      if (c === " ") return "Space";
+      if (/[a-zA-Z]/.test(c)) return "Key" + c.toUpperCase();
+      if (/[0-9]/.test(c)) return "Digit" + c;
+      return PUNCT_CODE[c] || null;
+    }
+
+    const FALLBACK_KEY_ORDER = ["KeyA","KeyS","KeyD","KeyF","KeyJ","KeyK","KeyL","KeyG","KeyH",
+      "KeyQ","KeyW","KeyE","KeyR","KeyT","KeyY","KeyU","KeyI","KeyO","KeyP",
+      "KeyZ","KeyX","KeyC","KeyV","KeyB","KeyN","KeyM","Comma","Period","Slash",
+      "Semicolon","Quote","BracketLeft","BracketRight","Backslash","Minus","Equal",
+      "Backquote","Digit1","Digit2","Digit3","Digit4","Digit5","Digit6","Digit7","Digit8","Digit9","Digit0"];
+
+    const HIRAGANA_ROMAJI = {"あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"wo","ん":"n"};
+    const HIRAGANA_HINTS = {};
+    Object.entries(HIRAGANA_ROMAJI).forEach(([kana, romaji]) => {
+      const c = codeForAscii(romaji[0]);
+      if (c) HIRAGANA_HINTS[kana] = c;
+    });
+
+    const HANGUL_INITIALS = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+    const HANGUL_INITIAL_KEYS = {"ㄱ":"KeyR","ㄲ":"KeyR","ㄴ":"KeyS","ㄷ":"KeyE","ㄸ":"KeyE","ㄹ":"KeyF","ㅁ":"KeyA","ㅂ":"KeyQ","ㅃ":"KeyQ","ㅅ":"KeyT","ㅆ":"KeyT","ㅇ":"KeyD","ㅈ":"KeyW","ㅉ":"KeyW","ㅊ":"KeyC","ㅋ":"KeyZ","ㅌ":"KeyX","ㅍ":"KeyV","ㅎ":"KeyG"};
+    function hangulHint(ch) {
+      const cp = ch.codePointAt(0);
+      if (cp >= 0xAC00 && cp <= 0xD7A3) {
+        const initial = Math.floor((cp - 0xAC00) / 588);
+        return HANGUL_INITIAL_KEYS[HANGUL_INITIALS[initial]] || null;
+      }
+      return null;
+    }
+
+    const SCRIPT_PHONETIC_HINTS = {
+      Hiragana: HIRAGANA_HINTS,
+      Cherokee: {"Ꭰ":"KeyA","Ꭱ":"KeyE","Ꭲ":"KeyI","Ꭳ":"KeyO","Ꭴ":"KeyU","Ꭵ":"KeyV","Ꭶ":"KeyG","Ꭷ":"KeyK","Ꭽ":"KeyH","Ꮃ":"KeyL","Ꮉ":"KeyM","Ꮎ":"KeyN","Ꮖ":"KeyQ","Ꮜ":"KeyS","Ꮣ":"KeyD","Ꮤ":"KeyT","Ꮳ":"KeyJ","Ꮹ":"KeyW","Ꮿ":"KeyY"},
+      Meitei: {"ꯀ":"KeyK","ꯅ":"KeyN","ꯆ":"KeyC","ꯇ":"KeyT","ꯈ":"KeyX","ꯉ":"KeyG","ꯋ":"KeyW","ꯌ":"KeyY","ꯍ":"KeyH","ꯎ":"KeyU","ꯏ":"KeyI","ꯐ":"KeyF","ꯑ":"KeyA","ꯒ":"KeyG","ꯓ":"KeyZ","ꯔ":"KeyR","ꯕ":"KeyB","ꯖ":"KeyJ","ꯗ":"KeyD","ꯘ":"KeyK","ꯙ":"KeyD","ꯚ":"KeyV","ꯛ":"KeyK","ꯜ":"KeyL","ꯝ":"KeyM","ꯞ":"KeyP","ꯟ":"KeyN","ꯠ":"KeyT","ꯡ":"KeyG","ꯢ":"KeyI","ꯣ":"KeyO","ꯤ":"KeyI","ꯥ":"KeyA","ꯦ":"KeyE","ꯧ":"KeyU","ꯨ":"KeyU","ꯩ":"KeyE","ꯪ":"KeyN"},
+      Tibetan: {"ཀ":"KeyK","ཁ":"KeyK","ག":"KeyG","ང":"KeyN","ཅ":"KeyC","ཆ":"KeyC","ཇ":"KeyJ","ཉ":"KeyN","ཏ":"KeyT","ཐ":"KeyT","ད":"KeyD","ན":"KeyN","པ":"KeyP","ཕ":"KeyP","བ":"KeyB","མ":"KeyM","ཙ":"KeyC","ཚ":"KeyC","ཛ":"KeyJ","ཝ":"KeyW","ཞ":"KeyZ","ཟ":"KeyZ","འ":"KeyA","ཡ":"KeyY","ར":"KeyR","ལ":"KeyL","ཤ":"KeyS","ཥ":"KeyS","ས":"KeyS","ཧ":"KeyH","ཨ":"KeyA"},
+      "Ol Chiki": {"ᱠ":"KeyK","ᱡ":"KeyJ","ᱢ":"KeyM","ᱣ":"KeyW","ᱤ":"KeyI","ᱥ":"KeyS","ᱦ":"KeyH","ᱧ":"KeyN","ᱨ":"KeyR","ᱩ":"KeyU","ᱪ":"KeyC","ᱫ":"KeyD","ᱬ":"KeyN","ᱭ":"KeyY","ᱮ":"KeyE","ᱯ":"KeyP","ᱰ":"KeyD","ᱱ":"KeyN","ᱲ":"KeyR","ᱳ":"KeyO","ᱴ":"KeyT","ᱵ":"KeyB","ᱶ":"KeyV","ᱷ":"KeyH","ᱚ":"KeyA","ᱛ":"KeyT","ᱜ":"KeyG","ᱝ":"KeyN","ᱞ":"KeyL","ᱟ":"KeyA"},
+      Thaana: {"ހ":"KeyH","ނ":"KeyN","ރ":"KeyR","ބ":"KeyB","ޅ":"KeyL","ކ":"KeyK","އ":"KeyA","ވ":"KeyV","މ":"KeyM","ފ":"KeyF","ދ":"KeyD","ތ":"KeyT","ލ":"KeyL","ގ":"KeyG","ސ":"KeyS","ޑ":"KeyD","ޒ":"KeyZ","ޓ":"KeyT","ޔ":"KeyY","ޕ":"KeyP","ޖ":"KeyJ","ޗ":"KeyC"}
+    };
+    const SCRIPT_HINT_FNS = { Hangul: hangulHint };
+
+    function dedupeLayer(map) {
+      const out = {};
+      const seen = new Set();
+      for (const k in map) {
+        const v = map[k];
+        if (seen.has(v)) continue;
+        seen.add(v);
+        out[k] = v;
+      }
+      return out;
+    }
+
+    function buildLanguageKeymap(lang) {
+      if (lang.script === "Latin") return null;
+      const base = SCRIPT_KEYMAPS[lang.script];
+      const baseMap = (base && base.unshifted) ? base.unshifted : (base || {});
+      const unshifted = dedupeLayer(baseMap);
+
+      const coveredElsewhere = new Set();
+      if (base) ["shifted","altGr","altGrShift"].forEach(ln => {
+        if (base[ln]) for (const v of Object.values(base[ln])) coveredElsewhere.add(v);
+      });
+
+      const hints = SCRIPT_PHONETIC_HINTS[lang.script] || {};
+      const hintFn = SCRIPT_HINT_FNS[lang.script];
+      const all = (lang.levels || [lang.prompt || ""]).join(" ");
+      const chars = [...new Set(all.replace(/\s/g, ""))];
+      const needed = new Set(chars);
+      const freeKeys = FALLBACK_KEY_ORDER.filter(k => !(k in unshifted));
+      let fi = 0;
+      let mappedValues = new Set(Object.values(unshifted));
+
+      for (const c of chars) {
+        if (mappedValues.has(c)) continue;              // already on a key
+        if (coveredElsewhere.has(c)) continue;          // reachable via Shift/AltGr layer
+        let hint = hints[c];
+        if (!hint && hintFn) hint = hintFn(c);
+        if (hint && !(hint in unshifted)) { unshifted[hint] = c; mappedValues.add(c); continue; }
+        while (fi < freeKeys.length && unshifted[freeKeys[fi]]) fi++;
+        if (fi < freeKeys.length) { unshifted[freeKeys[fi]] = c; fi++; mappedValues.add(c); continue; }
+        // No free key: relocate the least-useful existing mapping
+        let victim = null;
+        for (const k of FALLBACK_KEY_ORDER) {
+          const v = unshifted[k];
+          if (v && !needed.has(v) && !coveredElsewhere.has(v)) { victim = k; break; }
+        }
+        if (!victim) for (const k of FALLBACK_KEY_ORDER) {
+          const v = unshifted[k];
+          if (v && !needed.has(v)) { victim = k; break; }
+        }
+        if (victim) { unshifted[victim] = c; mappedValues.add(c); }
+      }
+
+      const km = { unshifted };
+      if (base && base.shifted) km.shifted = dedupeLayer(base.shifted);
+      if (base && base.altGr) km.altGr = dedupeLayer(base.altGr);
+      if (base && base.altGrShift) km.altGrShift = dedupeLayer(base.altGrShift);
+      return km;
+    }
+
+    function findCharLayer(ch, keyMap) {
+      if (!keyMap || !keyMap.unshifted) return null;
+      const layers = [["unshifted", keyMap.unshifted], ["shifted", keyMap.shifted], ["altGr", keyMap.altGr], ["altGrShift", keyMap.altGrShift]];
+      for (const [name, layer] of layers) {
+        if (layer && Object.values(layer).indexOf(ch) !== -1) return name;
+      }
+      return null;
+    }
+
+    function resolveActiveKeymap(scriptKeymap, activeModifier = "unshifted") {
+      if (!scriptKeymap) return null;
+      if (scriptKeymap.unshifted) {
+        if (activeModifier === "altGrShift" && scriptKeymap.altGrShift) return scriptKeymap.altGrShift;
+        if (activeModifier === "altGr" && scriptKeymap.altGr) return scriptKeymap.altGr;
+        if (activeModifier === "shifted" && scriptKeymap.shifted) return scriptKeymap.shifted;
+        return scriptKeymap.unshifted;
+      }
+      return scriptKeymap;
+    }
+
+    const REGIONS = ["All","South Asian","East Asian","Middle Eastern","European","Americas","Central Asian"];
+
+    const LANGS = LANG_DB.map(([code,name,native,region,script,rtl,prompt,flag,color]) => {
+      const lang = { code,name,native,region,script,rtl,prompt,flag,color };
+      lang.levels = buildLangLevels(lang);
+      lang.keyMap = buildLanguageKeymap(lang);
+      return lang;
+    });
+    const DEFAULT_LANG = LANGS.find(l => l.code === "en" && l.name === "English");
+
+    /* ═══════════════════════════════════════════════════════════════
+       KEYBOARD LAYOUT & CONSTANTS
+    ═══════════════════════════════════════════════════════════════ */
+    const FINGER_COLORS = {
+      pinky:  { hex:"#ec4899", glow:"rgba(236,72,153,0.5)",  label:"Pinky"  },
+      ring:   { hex:"#a855f7", glow:"rgba(168,85,247,0.5)",  label:"Ring"   },
+      middle: { hex:"#3b82f6", glow:"rgba(59,130,246,0.5)",  label:"Middle" },
+      index:  { hex:"#06b6d4", glow:"rgba(6,182,212,0.5)",   label:"Index"  },
+      thumb:  { hex:"#0ea5e9", glow:"rgba(14,165,233,0.5)",  label:"Thumb"  },
+    };
+
+    const KEY_UNIT = 1.5;
+    const KEY_GAP  = 0.14;
+    const KEY_H    = 1.5;
+
+    const KEYBOARD_ROWS = [
+      { stagger:0,    keys:[
+        {code:"Backquote", char:"`",     shifted:"~",w:1,    finger:"pinky", hand:"left"},
+        {code:"Digit1",    char:"1",     shifted:"!",w:1,    finger:"pinky", hand:"left"},
+        {code:"Digit2",    char:"2",     shifted:"@",w:1,    finger:"ring",  hand:"left"},
+        {code:"Digit3",    char:"3",     shifted:"#",w:1,    finger:"middle",hand:"left"},
+        {code:"Digit4",    char:"4",     shifted:"$",w:1,    finger:"index", hand:"left"},
+        {code:"Digit5",    char:"5",     shifted:"%",w:1,    finger:"index", hand:"left"},
+        {code:"Digit6",    char:"6",     shifted:"^",w:1,    finger:"index", hand:"right"},
+        {code:"Digit7",    char:"7",     shifted:"&",w:1,    finger:"index", hand:"right"},
+        {code:"Digit8",    char:"8",     shifted:"*",w:1,    finger:"middle",hand:"right"},
+        {code:"Digit9",    char:"9",     shifted:"(",w:1,    finger:"ring",  hand:"right"},
+        {code:"Digit0",    char:"0",     shifted:")",w:1,    finger:"pinky", hand:"right"},
+        {code:"Minus",     char:"-",     shifted:"_",w:1,    finger:"pinky", hand:"right"},
+        {code:"Equal",     char:"=",     shifted:"+",w:1,    finger:"pinky", hand:"right"},
+        {code:"Backspace", char:"⌫",     w:2,    finger:"pinky", hand:"right"},
+      ]},
+      { stagger:0.5,  keys:[
+        {code:"Tab",          char:"Tab", w:1.5, finger:"pinky", hand:"left"},
+        {code:"KeyQ",char:"Q",w:1,finger:"pinky",hand:"left"},
+        {code:"KeyW",char:"W",w:1,finger:"ring", hand:"left"},
+        {code:"KeyE",char:"E",w:1,finger:"middle",hand:"left"},
+        {code:"KeyR",char:"R",w:1,finger:"index",hand:"left"},
+        {code:"KeyT",char:"T",w:1,finger:"index",hand:"left"},
+        {code:"KeyY",char:"Y",w:1,finger:"index",hand:"right"},
+        {code:"KeyU",char:"U",w:1,finger:"index",hand:"right"},
+        {code:"KeyI",char:"I",w:1,finger:"middle",hand:"right"},
+        {code:"KeyO",char:"O",w:1,finger:"ring",  hand:"right"},
+        {code:"KeyP",char:"P",w:1,finger:"pinky", hand:"right"},
+        {code:"BracketLeft", char:"[", shifted:"{",w:1,finger:"pinky",hand:"right"},
+        {code:"BracketRight",char:"]", shifted:"}",w:1,finger:"pinky",hand:"right"},
+        {code:"Backslash",   char:"\\", shifted:"|",w:1.5,finger:"pinky",hand:"right"},
+      ]},
+      { stagger:0.75, keys:[
+        {code:"CapsLock",char:"Caps",w:1.75,finger:"pinky",hand:"left"},
+        {code:"KeyA",char:"A",w:1,finger:"pinky",hand:"left"},
+        {code:"KeyS",char:"S",w:1,finger:"ring", hand:"left"},
+        {code:"KeyD",char:"D",w:1,finger:"middle",hand:"left"},
+        {code:"KeyF",char:"F",w:1,finger:"index",hand:"left"},
+        {code:"KeyG",char:"G",w:1,finger:"index",hand:"left"},
+        {code:"KeyH",char:"H",w:1,finger:"index",hand:"right"},
+        {code:"KeyJ",char:"J",w:1,finger:"index",hand:"right"},
+        {code:"KeyK",char:"K",w:1,finger:"middle",hand:"right"},
+        {code:"KeyL",char:"L",w:1,finger:"ring",  hand:"right"},
+        {code:"Semicolon",char:";", shifted:":",w:1,finger:"pinky",hand:"right"},
+        {code:"Quote",    char:"'", shifted:"\"",w:1,finger:"pinky",hand:"right"},
+        {code:"Enter",    char:"↵",w:2.25,finger:"pinky",hand:"right"},
+      ]},
+      { stagger:1.25, keys:[
+        {code:"ShiftLeft", char:"Shift",w:2.25,finger:"pinky",hand:"left"},
+        {code:"KeyZ",char:"Z",w:1,finger:"pinky",hand:"left"},
+        {code:"KeyX",char:"X",w:1,finger:"ring", hand:"left"},
+        {code:"KeyC",char:"C",w:1,finger:"middle",hand:"left"},
+        {code:"KeyV",char:"V",w:1,finger:"index",hand:"left"},
+        {code:"KeyB",char:"B",w:1,finger:"index",hand:"left"},
+        {code:"KeyN",char:"N",w:1,finger:"index",hand:"right"},
+        {code:"KeyM",char:"M",w:1,finger:"index",hand:"right"},
+        {code:"Comma",char:",", shifted:"<",w:1,finger:"middle",hand:"right"},
+        {code:"Period",char:".", shifted:">",w:1,finger:"ring",  hand:"right"},
+        {code:"Slash",char:"/", shifted:"?",w:1,finger:"pinky", hand:"right"},
+        {code:"ShiftRight",char:"Shift",w:2.75,finger:"pinky",hand:"right"},
+      ]},
+      { stagger:1.75, keys:[
+        {code:"ControlLeft",char:"Ctrl",w:1.5,finger:"pinky",hand:"left"},
+        {code:"AltLeft",    char:"Alt", w:1.25,finger:"thumb",hand:"left"},
+        {code:"Space",      char:" ",   w:6.25,finger:"thumb",hand:"left"},
+        {code:"AltRight",   char:"Alt", w:1.25,finger:"thumb",hand:"right"},
+        {code:"ControlRight",char:"Ctrl",w:1.5,finger:"pinky",hand:"right"},
+      ]}
+    ];
+
+    function computeStars(levelId, targetWpm, finalWpm, finalAcc) {
+      // Levels 1-20: EXTREMELY EASY in every language — graded bars so any
+      // player can unlock and enjoy the first half of the game.
+      // L1-10: 3★ = 60% speed/90% acc, 2★ = 30% speed/80% acc
+      // L11-20: 3★ = 75% speed/90% acc, 2★ = 45% speed/80% acc
+      // Levels 21-40: eased 2★ (60% speed/85% acc) so the whole game
+      // progresses smoothly; 3★ keeps the full challenge (100%/95%).
+      if (levelId <= 20) {
+        const s3 = levelId <= 10 ? 0.6 : 0.75;
+        const s2 = levelId <= 10 ? 0.3 : 0.45;
+        if (finalWpm >= targetWpm * s3 && finalAcc >= 90) return 3;
+        if (finalWpm >= targetWpm * s2 && finalAcc >= 80) return 2;
+        return 1;
+      }
+      if (finalWpm >= targetWpm && finalAcc >= 95) return 3;
+      if (finalWpm >= targetWpm * 0.6 && finalAcc >= 85) return 2;
+      return 1;
+    }
+
+    function getKeyConfigForChar(ch, scriptKeymap, activeModifier = "unshifted") {
+      if (!ch) return null;
+      if (ch === " ") return KEYBOARD_ROWS[4].keys[2];
+
+      if (scriptKeymap) {
+        const layers = scriptKeymap.unshifted ?
+          [resolveActiveKeymap(scriptKeymap, activeModifier), scriptKeymap.unshifted, scriptKeymap.shifted, scriptKeymap.altGr, scriptKeymap.altGrShift] :
+          [scriptKeymap];
+
+        for (const layer of layers) {
+          if (!layer) continue;
+          for (const [code, mappedChar] of Object.entries(layer)) {
+            if (mappedChar === ch) {
+              for (const row of KEYBOARD_ROWS)
+                for (const k of row.keys)
+                  if (k.code === code) return k;
+            }
+          }
+        }
+      }
+
+      const upper = ch.toUpperCase();
+      const lower = ch.toLowerCase();
+      const nch = stripDiacritics(ch).toLowerCase();
+      for (const row of KEYBOARD_ROWS)
+        for (const k of row.keys)
+          if (k.char === ch || k.char === upper || k.char === lower || stripDiacritics(k.char).toLowerCase() === nch || (k.shifted && (k.shifted === ch || k.shifted === upper || k.shifted === lower))) return k;
+      return KEYBOARD_ROWS[2].keys[3];
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SOUND ENGINE
+    ═══════════════════════════════════════════════════════════════ */
+    class SoundEngine {
+      constructor() { this.ctx = null; this.enabled = true; }
+      init() {
+        if (!this.ctx && typeof window !== "undefined") {
+          const C = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new C();
+        }
+        if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+      }
+      _click(freq, dur, gain) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        const bpf = this.ctx.createBiquadFilter();
+        bpf.type = "bandpass"; bpf.frequency.value = freq; bpf.Q.value = 0.8;
+        osc.type = "square";
+        osc.frequency.setValueAtTime(freq * 2.2, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.6, now + dur);
+        g.gain.setValueAtTime(gain, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(bpf); bpf.connect(g); g.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + dur + 0.01);
+      }
+      playKeyPress(isError = false) {
+        if (!this.enabled) return; this.init(); if (!this.ctx) return;
+        if (isError) { this._click(120, 0.12, 0.18); return; }
+        this._click(900 + Math.random() * 400, 0.025, 0.22);
+        const now = this.ctx.currentTime;
+        const n = this.ctx.createOscillator(); const ng = this.ctx.createGain();
+        n.type = "sawtooth"; n.frequency.setValueAtTime(3000, now);
+        ng.gain.setValueAtTime(0.05, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        n.connect(ng); ng.connect(this.ctx.destination);
+        n.start(now); n.stop(now + 0.022);
+      }
+      playVictory() {
+        if (!this.enabled) return; this.init(); if (!this.ctx) return;
+        [523.25,659.25,783.99,1046.5,1318.5].forEach((freq,i) => {
+          const now = this.ctx.currentTime + i * 0.1;
+          const osc = this.ctx.createOscillator(); const g = this.ctx.createGain();
+          osc.type = "triangle"; osc.frequency.setValueAtTime(freq, now);
+          g.gain.setValueAtTime(0.18, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.connect(g); g.connect(this.ctx.destination);
+          osc.start(now); osc.stop(now + 0.5);
+        });
+      }
+    }
+    const audio = new SoundEngine();
+
+    const textureCache = new Map();
+
+    function createKeycapTexture(text, isActive, theme) {
+      const cacheKey = `${text}|${isActive}|${theme.id}`;
+      if (textureCache.has(cacheKey)) return textureCache.get(cacheKey);
+      const size = 256;
+      const c = document.createElement("canvas"); c.width = size; c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, size, size);
+      const rawLabel = text === "" ? "SPC" : text;
+      const label = rawLabel.length > 5 ? rawLabel.substring(0,5) : rawLabel;
+      const fontSize = label.length > 3 ? (label.length > 4 ? 40 : 50) : (label.length > 1 ? 64 : 80);
+
+      if (isActive) {
+        ctx.shadowColor = theme.accentHex; ctx.shadowBlur = 28;
+        ctx.fillStyle = theme.accentHex;
+      } else {
+        ctx.shadowColor = theme.isLight ? "rgba(20,30,50,0.3)" : theme.accentHex + "44";
+        ctx.shadowBlur = theme.isLight ? 4 : 10;
+        ctx.fillStyle = theme.textColor;
+      }
+      const fontStack = `"JetBrains Mono","Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Sans Tamil","Noto Sans Malayalam","Noto Sans Telugu","Noto Sans Kannada","Noto Sans Gujarati","Noto Sans Gurmukhi","Noto Sans Oriya","Noto Sans Sinhala","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Greek","Noto Sans Thai","Noto Sans Georgian","Noto Sans Armenian","Noto Sans Ethiopic","Noto Sans Myanmar","Noto Sans Cherokee","Noto Sans Meetei Mayek","Noto Sans Tibetan","Noto Sans Ol Chiki","Noto Sans Thaana","Noto Sans Khmer","Noto Sans Lao",sans-serif`;
+      ctx.font = `800 ${fontSize}px ${fontStack}`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(label, size/2, size/2);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = isActive ? "#ffffff" : theme.textColor;
+      ctx.font = `800 ${fontSize}px ${fontStack}`;
+      ctx.fillText(label, size/2, size/2);
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      textureCache.set(cacheKey, tex);
+      return tex;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       3D MECHANICAL KEYBOARD CANVAS
+    ═══════════════════════════════════════════════════════════════ */
+    function Keyboard3DCanvas({ pressedKeysRef, activeTargetKeyRef, cameraPreset, langCode, keyboardMap, theme, activeModifier }) {
+      const containerRef = useRef(null);
+      const stateRef = useRef({ pressedKeys: new Set(), activeTargetKey: null });
+
+      useEffect(() => { stateRef.current.pressedKeys = pressedKeysRef.current; });
+      useEffect(() => { stateRef.current.activeTargetKey = activeTargetKeyRef.current; });
+
+      const resolvedMap = useMemo(() => resolveActiveKeymap(keyboardMap, activeModifier), [keyboardMap, activeModifier]);
+
+      useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const W = container.clientWidth, H = container.clientHeight;
+
+        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:"high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+        renderer.setSize(W, H);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(42, W/H, 0.1, 200);
+        camera.position.set(0, 8, 11);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = false; controls.enablePan = false;
+        controls.maxPolarAngle = Math.PI/2.4; controls.minPolarAngle = Math.PI/7;
+        controls.rotateSpeed = 0.5; controls.dampingFactor = 0.08; controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0x1a1a3a, theme.isLight ? 2.2 : 1.8));
+        const sun = new THREE.DirectionalLight(0xffffff, theme.isLight ? 2.4 : 1.5);
+        sun.position.set(8,16,8); sun.castShadow = true;
+        sun.shadow.mapSize.set(1024,1024); sun.shadow.bias = -0.001;
+        scene.add(sun);
+        const fill = new THREE.DirectionalLight(theme.accentInt, 0.4);
+        fill.position.set(-8,4,10); scene.add(fill);
+        const rgbLight = new THREE.PointLight(theme.accentInt, 3.5, 30);
+        rgbLight.position.set(0,7,0); scene.add(rgbLight);
+        const keySpotlight = new THREE.PointLight(theme.accentInt, 0, 8);
+        keySpotlight.position.set(0,4,0); scene.add(keySpotlight);
+
+        const floorMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(50,50),
+          new THREE.MeshStandardMaterial({ color:0x04060f, roughness:0.9, metalness:0.05 })
+        );
+        floorMesh.rotation.x = -Math.PI/2; floorMesh.position.y = -0.85;
+        floorMesh.receiveShadow = true; scene.add(floorMesh);
+
+        let maxRowWidth = 0;
+        KEYBOARD_ROWS.forEach(row => {
+          let w = row.stagger * KEY_UNIT;
+          row.keys.forEach(k => { w += k.w * KEY_UNIT + KEY_GAP; });
+          if (w > maxRowWidth) maxRowWidth = w;
+        });
+        const chassisW = maxRowWidth + 0.4;
+        const chassisD = KEYBOARD_ROWS.length * (KEY_H + KEY_GAP) + 0.4;
+
+        const chassis = new THREE.Mesh(
+          new THREE.BoxGeometry(chassisW, 0.55, chassisD),
+          new THREE.MeshStandardMaterial({ color: theme.chassis, roughness:0.2, metalness: theme.isLight ? 0.45 : 0.9 })
+        );
+        chassis.position.set(0,-0.42,0); chassis.receiveShadow = true; scene.add(chassis);
+
+        const edgeStripMat = new THREE.MeshStandardMaterial({
+          color: theme.accentInt, emissive: theme.accentInt, emissiveIntensity:1.4, roughness:0.1, metalness:0.8
+        });
+        const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(chassisW+0.06,0.04,chassisD+0.06), edgeStripMat);
+        edgeStrip.position.set(0,-0.15,0); scene.add(edgeStrip);
+
+        const keyMeshes = new Map();
+        const centerOffsetX = -maxRowWidth / 2;
+        const startZ = -(chassisD/2)+0.5;
+
+        KEYBOARD_ROWS.forEach((row, rIdx) => {
+          const rowZ = startZ + rIdx * (KEY_H + KEY_GAP);
+          let curX = centerOffsetX + row.stagger * KEY_UNIT;
+
+          row.keys.forEach(key => {
+            const kw = key.w * KEY_UNIT - KEY_GAP * 0.5;
+            const kh = KEY_H - KEY_GAP * 0.5;
+            const group = new THREE.Group();
+            const posX = curX + kw/2;
+            group.position.set(posX, 0, rowZ);
+
+            const fc = parseInt(FINGER_COLORS[key.finger].hex.replace("#",""), 16);
+
+            const bodyMat = new THREE.MeshStandardMaterial({
+              color: theme.keyBody,
+              roughness: theme.isLight ? 0.22 : 0.18,
+              metalness: theme.isLight ? 0.35 : 0.85,
+              emissive:0x000000, emissiveIntensity:0,
+            });
+            const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(kw,0.46,kh), bodyMat);
+            bodyMesh.castShadow = true; bodyMesh.receiveShadow = true; group.add(bodyMesh);
+
+            const shoulderMesh = new THREE.Mesh(
+              new THREE.BoxGeometry(kw*0.94, 0.42, kh*0.94),
+              new THREE.MeshStandardMaterial({ color: theme.keyBody, roughness:0.15, metalness: theme.isLight ? 0.3 : 0.88 })
+            );
+            shoulderMesh.position.y = 0.05; group.add(shoulderMesh);
+
+            const topMesh = new THREE.Mesh(
+              new THREE.BoxGeometry(kw-0.08, 0.05, kh-0.08),
+              new THREE.MeshStandardMaterial({ color: theme.keyTop, roughness:0.12, metalness: theme.isLight ? 0.38 : 0.92 })
+            );
+            topMesh.position.y = 0.25; group.add(topMesh);
+
+            const rimMesh = new THREE.Mesh(
+              new THREE.BoxGeometry(kw-0.02, 0.02, kh-0.02),
+              new THREE.MeshStandardMaterial({ color:fc, emissive:fc, emissiveIntensity:0.35, roughness:0.1, metalness:0.7 })
+            );
+            rimMesh.position.y = 0.24; group.add(rimMesh);
+
+            const displayChar = resolvedMap ? (resolvedMap[key.code] || key.char) : key.char;
+            const labelText = displayChar === "" ? "SPC" : displayChar;
+            const labelW = Math.min(kw-0.14, 0.9);
+            const labelH = Math.min(kh-0.14, 0.9);
+            const labelMat = new THREE.MeshBasicMaterial({
+              map: createKeycapTexture(labelText, false, theme),
+              transparent:true, depthWrite:false, side:THREE.FrontSide,
+            });
+            const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(labelW, labelH), labelMat);
+            labelMesh.rotation.x = -Math.PI/2;
+            labelMesh.position.set(0, 0.285, 0);
+            group.add(labelMesh);
+
+            scene.add(group);
+            keyMeshes.set(key.code, { group, bodyMesh, labelMesh, labelMat, displayChar, posX, posZ:rowZ });
+            curX += kw + KEY_GAP;
+          });
+        });
+
+        const pCount = 80;
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(pCount*3);
+        for (let i=0; i<pCount; i++) {
+          pPos[i*3]   = (Math.random()-0.5)*chassisW*1.2;
+          pPos[i*3+1] = Math.random()*5+1.5;
+          pPos[i*3+2] = (Math.random()-0.5)*chassisD*1.2;
+        }
+        pGeo.setAttribute("position", new THREE.BufferAttribute(pPos,3));
+        const pMat = new THREE.PointsMaterial({ color: theme.accentInt, size:0.06, transparent:true, opacity:0.5, sizeAttenuation:true });
+        scene.add(new THREE.Points(pGeo, pMat));
+
+        const keyStateY = new Map();
+        const clock = new THREE.Clock();
+        let raf;
+
+        const CAM_PRESETS = {
+          isometric: new THREE.Vector3(0,8,11),
+          fps:       new THREE.Vector3(0,4.5,8),
+          top:       new THREE.Vector3(0,14,0.5),
+        };
+
+        function animate() {
+          raf = requestAnimationFrame(animate);
+          const t = clock.getElapsedTime();
+
+          rgbLight.intensity = 2.5 + Math.sin(t*1.2)*0.5;
+          edgeStripMat.emissiveIntensity = 0.9 + Math.sin(t*1.5)*0.3;
+
+          const pos = pGeo.attributes.position.array;
+          for (let i=0; i<pCount; i++) pos[i*3+1] += Math.sin(t*0.6+i*0.7)*0.003;
+          pGeo.attributes.position.needsUpdate = true;
+          pMat.opacity = 0.3 + Math.sin(t*0.5)*0.15;
+
+          const cp = cameraPreset || "isometric";
+          camera.position.lerp(CAM_PRESETS[cp] || CAM_PRESETS.isometric, 0.04);
+
+          const pressed = stateRef.current.pressedKeys;
+          const active  = stateRef.current.activeTargetKey;
+
+          keyMeshes.forEach((item, code) => {
+            const isPressed = pressed && pressed.has(code);
+            const isActive  = active && active.code === code;
+
+            const targetY = isPressed ? -0.18 : 0;
+            const currY = keyStateY.get(code) || 0;
+            const newY  = currY + (targetY - currY) * 0.28;
+            keyStateY.set(code, newY);
+            item.group.position.y = newY;
+
+            if (isPressed) {
+              item.bodyMesh.material.color.setHex(0x1a0030);
+              item.bodyMesh.material.emissive.setHex(theme.accentInt);
+              item.bodyMesh.material.emissiveIntensity = 2.8;
+              item.bodyMesh.material.roughness = 0.08;
+              item.labelMat.map = createKeycapTexture(item.displayChar || "SPC", true, theme);
+              item.labelMat.needsUpdate = true;
+              keySpotlight.color.setHex(theme.accentInt);
+              keySpotlight.intensity = 5.0;
+              keySpotlight.position.set(item.posX, 4, item.posZ);
+            } else if (isActive) {
+              const pulse = 0.7 + Math.sin(t*5)*0.3;
+              item.bodyMesh.material.color.setHex(theme.isLight ? 0xe2e8f0 : 0x001a33);
+              item.bodyMesh.material.emissive.setHex(theme.accentInt);
+              item.bodyMesh.material.emissiveIntensity = 1.8*pulse;
+              item.bodyMesh.material.roughness = 0.10;
+              item.labelMat.map = createKeycapTexture(item.displayChar || "SPC", true, theme);
+              item.labelMat.needsUpdate = true;
+              keySpotlight.color.setHex(theme.accentInt);
+              keySpotlight.intensity = 3.5*pulse;
+              keySpotlight.position.set(item.posX, 3.5, item.posZ);
+            } else {
+              item.bodyMesh.material.color.setHex(theme.keyBody);
+              item.bodyMesh.material.emissive.setHex(0x000000);
+              item.bodyMesh.material.emissiveIntensity = 0;
+              item.bodyMesh.material.roughness = theme.isLight ? 0.22 : 0.18;
+            }
+          });
+
+          controls.update();
+          renderer.render(scene, camera);
+        }
+        animate();
+
+        const handleResize = () => {
+          const w=container.clientWidth, h=container.clientHeight;
+          camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => {
+          window.removeEventListener("resize", handleResize);
+          cancelAnimationFrame(raf);
+          controls.dispose(); renderer.dispose();
+          if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+        };
+      }, [cameraPreset, langCode, theme, resolvedMap]);
+
+      return <div ref={containerRef} style={{ width:"100%", height:"100%" }} />;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LANGUAGE SELECTOR MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    const SCRIPT_COLORS = {
+      "Latin":"#64748b","Cyrillic":"#a855f7","Devanagari":"#f97316","Arabic":"#06b6d4",
+      "Hebrew":"#22d3ee","Greek":"#84cc16","Hangul":"#ec4899","Hiragana":"#f43f5e",
+      "Tamil":"#fb923c","Malayalam":"#10b981","Bengali":"#6366f1","Gujarati":"#eab308",
+      "Kannada":"#14b8a6","Telugu":"#8b5cf6","Gurmukhi":"#f59e0b","Thai":"#ef4444",
+      "Georgian":"#06b6d4","Armenian":"#a3e635","Ethiopic":"#d946ef","Cherokee":"#f97316",
+      "Odia":"#22d3ee","CJK":"#ec4899","Myanmar":"#94a3b8","Sinhala":"#94a3b8",
+      "Meitei":"#94a3b8","Tibetan":"#94a3b8",
+      "Khmer":"#94a3b8","Lao":"#84cc16","Ol Chiki":"#f97316","Thaana":"#06b6d4",
+    };
+
+    function LanguageSelectorModal({ activeLang, onSelect, onClose }) {
+      const [search, setSearch] = useState("");
+      const [region, setRegion] = useState("All");
+
+      const filtered = useMemo(() => {
+        let list = LANGS;
+        if (region !== "All") list = list.filter(l => l.region === region);
+        if (search.trim()) {
+          const q = search.toLowerCase();
+          list = list.filter(l =>
+            l.name.toLowerCase().includes(q) ||
+            l.native.toLowerCase().includes(q) ||
+            l.script.toLowerCase().includes(q) ||
+            l.code.toLowerCase().includes(q)
+          );
+        }
+        return list;
+      }, [search, region]);
+
+      useEffect(() => {
+        const esc = (e) => { if (e.key === "Escape") onClose(); };
+        window.addEventListener("keydown", esc);
+        return () => window.removeEventListener("keydown", esc);
+      }, [onClose]);
+
+      const regionCounts = useMemo(() => {
+        const counts = {};
+        REGIONS.forEach(r => {
+          counts[r] = r === "All" ? LANGS.length : LANGS.filter(l => l.region === r).length;
+        });
+        return counts;
+      }, []);
+
+      return (
+        <div className="lang-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+          <div className="lang-modal">
+            <div className="lang-modal-header">
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div>
+                  <h2 style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"16px", fontWeight:800, letterSpacing:"0.08em", color:"#00f5ff", textShadow:"0 0 16px rgba(0,245,255,0.6)" }}>
+                    🌍 GLOBAL LANGUAGE ENGINE
+                  </h2>
+                  <p style={{ fontSize:"11px", color:"#475569", fontFamily:"'Orbitron',sans-serif", letterSpacing:"0.1em", marginTop:"3px" }}>
+                    {LANGS.length} LANGUAGES · 20+ SCRIPTS · 4-LAYER MODIFIER MAPPINGS
+                  </p>
+                </div>
+                <button onClick={onClose} style={{ background:"rgba(255,0,229,0.1)", border:"1px solid rgba(255,0,229,0.3)", color:"#ff00e5", borderRadius:"8px", padding:"6px 12px", cursor:"pointer", fontFamily:"'Orbitron',sans-serif", fontSize:"10px", fontWeight:700 }}>
+                  ✕ CLOSE
+                </button>
+              </div>
+
+              <input
+                className="lang-search"
+                placeholder="🔍  Search languages, scripts, regions..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onClick={e => e.stopPropagation()}
+                autoFocus
+              />
+
+              <div className="region-tabs">
+                {REGIONS.map(r => (
+                  <button key={r} className={`region-tab ${region === r ? "active" : ""}`} onClick={() => setRegion(r)}>
+                    {r === "All" ? `ALL (${regionCounts[r]})` : `${r.toUpperCase().split(" ").join(" ")} (${regionCounts[r]})`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lang-grid">
+              {filtered.length === 0 ? (
+                <div style={{ gridColumn:"1/-1", textAlign:"center", padding:"40px 0", color:"#475569", fontFamily:"'Orbitron',sans-serif", fontSize:"12px" }}>
+                  NO LANGUAGES FOUND · TRY A DIFFERENT SEARCH
+                </div>
+              ) : filtered.map((lang, idx) => {
+                const scColor = SCRIPT_COLORS[lang.script] || "#64748b";
+                const isSelected = activeLang.code === lang.code && activeLang.name === lang.name;
+                return (
+                  <div
+                    key={`${lang.code}-${lang.name}`}
+                    className={`lang-card ${isSelected ? "selected" : ""}`}
+                    onClick={() => { onSelect(lang); onClose(); }}
+                    style={{ animationDelay:`${Math.min(idx,20)*0.02}s` }}
+                  >
+                    <div className="lang-card-flag">{lang.flag}</div>
+                    <div className="lang-card-name">{lang.name}</div>
+                    <div className="lang-card-native" style={{ fontFamily:"'Noto Sans','Noto Sans Devanagari','Noto Sans Bengali','Noto Sans Tamil','Noto Sans Malayalam','Noto Sans Telugu','Noto Sans Kannada','Noto Sans Gujarati','Noto Sans Gurmukhi','Noto Sans Oriya','Noto Sans Sinhala','Noto Sans Arabic','Noto Sans Hebrew','Noto Sans Greek','Noto Sans Thai','Noto Sans Georgian','Noto Sans Armenian','Noto Sans Ethiopic','Noto Sans Myanmar','Noto Sans Cherokee','Noto Sans Meetei Mayek','Noto Sans Tibetan','Noto Sans Ol Chiki','Noto Sans Thaana','Noto Sans Khmer','Noto Sans Lao',sans-serif" }}>{lang.native}</div>
+                    <div className="lang-card-tags">
+                      <span className="script-tag" style={{ background:`${scColor}18`, border:`1px solid ${scColor}44`, color:scColor }}>
+                        {lang.script}
+                      </span>
+                      {lang.rtl && <span className="rtl-badge">RTL</span>}
+                      {lang.keyMap && (
+                        <span className="script-tag" style={{ background:"rgba(0,245,255,0.1)", border:"1px solid rgba(0,245,255,0.25)", color:"#00f5ff" }}>
+                          4 LAYERS
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LEVEL SELECTOR MODAL
+    ═══════════════════════════════════════════════════════════════ */
+    function LevelSelectorModal({ activeLevel, unlockedLevel, onSelectLevel, onClose }) {
+      return (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+          <div className="level-modal">
+            <div className="level-modal-header">
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div>
+                  <h2 style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"16px", fontWeight:800, letterSpacing:"0.08em", color:"#ffd700", textShadow:"0 0 16px rgba(255,215,0,0.6)" }}>
+                    🎯 TYPING MASTERY LEVELS (1 - 40)
+                  </h2>
+                  <p style={{ fontSize:"11px", color:"#475569", fontFamily:"'Orbitron',sans-serif", letterSpacing:"0.1em", marginTop:"3px" }}>
+                    PROGRESSIVE SPEED CHALLENGES · EARN 2★ TO UNLOCK THE NEXT LEVEL
+                  </p>
+                  <div style={{ display:"flex", gap:"14px", marginTop:"7px", fontSize:"9px", fontFamily:"'Orbitron',sans-serif", letterSpacing:"0.06em" }}>
+                    <span style={{ color:"#ffd700" }}>⭐ 2★ UNLOCKS NEXT</span>
+                    <span style={{ color:"#00ff88" }}>⭐⭐⭐ 3★ = MASTERY</span>
+                    <span style={{ color:"#fb923c" }}>🔒 LOCKED UNTIL 2★</span>
+                  </div>
+                </div>
+                <button onClick={onClose} style={{ background:"rgba(255,0,229,0.1)", border:"1px solid rgba(255,0,229,0.3)", color:"#ff00e5", borderRadius:"8px", padding:"6px 12px", cursor:"pointer", fontFamily:"'Orbitron',sans-serif", fontSize:"10px", fontWeight:700 }}>
+                  ✕ CLOSE
+                </button>
+              </div>
+            </div>
+
+            <div className="level-grid">
+              {LEVELS.map((lvl) => {
+                const isSelected = activeLevel.id === lvl.id;
+                const isLocked   = lvl.id > unlockedLevel;
+                return (
+                  <div
+                    key={lvl.id}
+                    className={`level-card ${isSelected ? "selected" : ""} ${isLocked ? "locked" : ""}`}
+                    title={isLocked ? "Earn 2★ or more on the previous level to unlock this one" : `Target: ${lvl.targetWpm} WPM`}
+                    onClick={() => {
+                      if (!isLocked) { onSelectLevel(lvl); onClose(); }
+                    }}
+                  >
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span style={{ fontSize:"22px" }}>{isLocked ? "🔒" : lvl.icon}</span>
+                      <span style={{ fontSize:"9px", padding:"2px 8px", borderRadius:"6px", background: isLocked ? "rgba(255,255,255,0.05)" : "rgba(0,245,255,0.15)", border: isLocked ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,245,255,0.3)", color: isLocked ? "#64748b" : "#00f5ff", fontFamily:"'Orbitron',sans-serif", fontWeight:700 }}>
+                        TARGET: {lvl.targetWpm} WPM
+                      </span>
+                    </div>
+
+                    <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:"16px", color: isLocked ? "#64748b" : "#f8fafc", marginTop:"4px" }}>
+                      {lvl.name}
+                    </div>
+
+                    <div style={{ fontSize:"11px", color: "#94a3b8", marginTop:"2px" }}>
+                      {lvl.desc}
+                    </div>
+
+                    {isLocked && (
+                      <div style={{ fontSize:"8px", color:"#fb923c", fontFamily:"'Orbitron',sans-serif", fontWeight:700, letterSpacing:"0.08em", marginTop:"4px" }}>🔒 EARN 2★ TO UNLOCK</div>
+                    )}
+
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:"8px" }}>
+                      <span style={{ fontSize:"9px", color:"#ffd700", fontFamily:"'Orbitron',sans-serif", fontWeight:700 }}>
+                        + {lvl.xpReward} XP
+                      </span>
+                      <span style={{ fontSize:"9px", color:"#a855f7", fontFamily:"'Orbitron',sans-serif", fontWeight:700 }}>
+                        {lvl.difficulty.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FINGER HUD
+    ═══════════════════════════════════════════════════════════════ */
+    function FingerHUD({ activeTargetKey }) {
+      const af = activeTargetKey?.finger;
+      const ah = activeTargetKey?.hand;
+      const leftF  = [{f:"pinky",name:"Pinky",keys:"Q A Z"},{f:"ring",name:"Ring",keys:"W S X"},{f:"middle",name:"Middle",keys:"E D C"},{f:"index",name:"Index",keys:"R F V"}];
+      const rightF = [{f:"index",name:"Index",keys:"Y H N"},{f:"middle",name:"Middle",keys:"I K ,"},{f:"ring",name:"Ring",keys:"O L ."},{f:"pinky",name:"Pinky",keys:"P ; '"}];
+      const renderF = (item, hand) => {
+        const isActive = ah === hand && af === item.f;
+        const fc = FINGER_COLORS[item.f];
+        return (
+          <div key={`${hand}-${item.f}`} className="finger-badge" style={{ background:isActive?`${fc.hex}18`:"rgba(0,0,0,0.3)", borderColor:isActive?`${fc.hex}55`:"rgba(255,255,255,0.06)", boxShadow:isActive?`0 0 14px ${fc.glow}`:"none", transform:isActive?"scale(1.04)":"scale(1)" }}>
+            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+              <div style={{ display:"flex",alignItems:"center",gap:"8px" }}>
+                <span style={{ width:"8px",height:"8px",borderRadius:"50%",background:fc.hex,boxShadow:isActive?`0 0 8px ${fc.hex}`:"none",display:"inline-block" }} />
+                <span style={{ fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:"12px",color:isActive?fc.hex:"#94a3b8",textShadow:isActive?`0 0 8px ${fc.hex}`:"none" }}>{item.name}</span>
+              </div>
+              <span style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:"9px",color:"#475569" }}>{item.keys}</span>
+            </div>
+          </div>
+        );
+      };
+      return (
+        <div className="glass" style={{ borderRadius:"16px",padding:"14px",display:"flex",flexDirection:"column",gap:"10px" }}>
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+            <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:700,letterSpacing:"0.1em",color:"#64748b",textTransform:"uppercase" }}>🖐 Finger Map</span>
+            {activeTargetKey && (
+              <div className="key-target-pill" style={{ background:`${FINGER_COLORS[af].hex}18`,border:`1px solid ${FINGER_COLORS[af].hex}44`,color:FINGER_COLORS[af].hex,textShadow:`0 0 8px ${FINGER_COLORS[af].hex}` }}>
+                <span style={{ width:"6px",height:"6px",borderRadius:"50%",background:FINGER_COLORS[af].hex,display:"inline-block" }} />
+                {ah?.toUpperCase()} {af?.toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px" }}>
+            <div>
+              <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:700,color:ah==="left"?"#00f5ff":"#334155",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:"6px",textShadow:ah==="left"?"0 0 8px #00f5ff80":"none" }}>◀ Left</div>
+              <div style={{ display:"flex",flexDirection:"column",gap:"4px" }}>{leftF.map(it=>renderF(it,"left"))}</div>
+            </div>
+            <div>
+              <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:700,color:ah==="right"?"#00f5ff":"#334155",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:"6px",textShadow:ah==="right"?"0 0 8px #00f5ff80":"none" }}>Right ▶</div>
+              <div style={{ display:"flex",flexDirection:"column",gap:"4px" }}>{rightF.map(it=>renderF(it,"right"))}</div>
+            </div>
+          </div>
+          <div className="finger-badge" style={{ background:af==="thumb"?"rgba(14,165,233,0.12)":"rgba(0,0,0,0.3)", borderColor:af==="thumb"?"rgba(14,165,233,0.4)":"rgba(255,255,255,0.06)", boxShadow:af==="thumb"?"0 0 14px rgba(14,165,233,0.4)":"none" }}>
+            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+              <div style={{ display:"flex",alignItems:"center",gap:"8px" }}>
+                <span style={{ width:"8px",height:"8px",borderRadius:"50%",background:"#0ea5e9",display:"inline-block" }} />
+                <span style={{ fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:"12px",color:af==="thumb"?"#0ea5e9":"#94a3b8" }}>Both Thumbs</span>
+              </div>
+              <span style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:"9px",color:af==="thumb"?"#0ea5e9":"#475569",padding:"2px 8px",borderRadius:"10px",background:af==="thumb"?"rgba(14,165,233,0.15)":"transparent",border:af==="thumb"?"1px solid rgba(14,165,233,0.3)":"1px solid transparent" }}>SPACEBAR</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MetricCard({ label, value, unit, color }) {
+      return (
+        <div className="metric-card">
+          <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:600,letterSpacing:"0.12em",color:"#475569",textTransform:"uppercase",marginBottom:"6px" }}>{label}</div>
+          <div style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:"24px",fontWeight:800,color,textShadow:`0 0 14px ${color}99`,lineHeight:1 }}>
+            {value}<span style={{ fontSize:"11px",fontWeight:600,marginLeft:"3px",opacity:0.7 }}>{unit}</span>
+          </div>
+        </div>
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MAIN APP COMPONENT
+    ═══════════════════════════════════════════════════════════════ */
+    function App() {
+      const [activeLang, setActiveLang]       = useState(DEFAULT_LANG);
+      const [showLangModal, setShowLangModal] = useState(false);
+      const [showLevelModal, setShowLevelModal] = useState(false);
+      const [currentTheme, setCurrentTheme]   = useState(COLOR_THEMES[0]);
+      const [activeModifier, setActiveModifier] = useState("unshifted");
+      const [activeLevel, setActiveLevel]     = useState(LEVELS[0]);
+      const [unlockedLevel, setUnlockedLevel] = useState(1);
+
+      // Start Test Flow State: "idle" | "running" | "completed"
+      const [testState, setTestState]         = useState("idle");
+
+      const [typedInput, setTypedInput]       = useState("");
+      const [pressedKeys, setPressedKeys]     = useState(new Set());
+      const [startTime, setStartTime]         = useState(null);
+      const [elapsed, setElapsed]             = useState(0);
+      const [totalKS, setTotalKS]             = useState(0);
+      const [errorCount, setErrorCount]       = useState(0);
+      const [streak, setStreak]               = useState(0);
+      const [xp, setXp]                       = useState(680);
+      const [audioEnabled, setAudioEnabled]   = useState(true);
+      const [cameraPreset, setCameraPreset]   = useState("isometric");
+      const [earnedStars, setEarnedStars]     = useState(0);
+
+      const pressedKeysRef  = useRef(pressedKeys);
+      const activeTargetRef = useRef(null);
+
+      const promptText = useMemo(() => getLevelPrompt(activeLang, activeLevel.id), [activeLang, activeLevel]);
+      const keyboardMap = activeLang.keyMap;
+      const targetChar = promptText[typedInput.length] || "";
+      const activeTargetKey = useMemo(() => getKeyConfigForChar(targetChar, keyboardMap, activeModifier), [targetChar, keyboardMap, activeModifier]);
+      const targetLayer = findCharLayer(targetChar, keyboardMap);
+
+      useEffect(() => { pressedKeysRef.current = pressedKeys; }, [pressedKeys]);
+      useEffect(() => { activeTargetRef.current = activeTargetKey; }, [activeTargetKey]);
+
+      // Reset on language, level, or theme change
+      useEffect(() => {
+        setTypedInput(""); setStartTime(null); setElapsed(0);
+        setTotalKS(0); setErrorCount(0); setStreak(0); setTestState("idle");
+        setEarnedStars(0);
+        textureCache.clear();
+      }, [activeLang, activeLevel, currentTheme]);
+
+      // Timer
+      useEffect(() => {
+        let t;
+        if (testState === "running" && startTime) {
+          t = setInterval(() => setElapsed(Math.floor((Date.now()-startTime)/1000)), 1000);
+        }
+        return () => clearInterval(t);
+      }, [startTime, testState]);
+
+      const wpm = useMemo(() => {
+        if (!startTime || elapsed === 0) return 0;
+        return Math.round((typedInput.length/5)/(elapsed/60));
+      }, [typedInput.length, elapsed, startTime]);
+
+      const accuracy = useMemo(() => {
+        if (totalKS === 0) return 100;
+        return Math.max(0, Math.round(((totalKS-errorCount)/totalKS)*100));
+      }, [totalKS, errorCount]);
+
+      const progress = Math.round((typedInput.length/promptText.length)*100);
+
+      const handleStartTest = () => {
+        setTypedInput("");
+        setStartTime(Date.now());
+        setElapsed(0);
+        setTotalKS(0);
+        setErrorCount(0);
+        setStreak(0);
+        setEarnedStars(0);
+        setTestState("running");
+      };
+
+      const handleReset = () => {
+        setTypedInput(""); setStartTime(null); setElapsed(0);
+        setTotalKS(0); setErrorCount(0); setStreak(0); setEarnedStars(0); setTestState("idle");
+      };
+
+      const handleKeyPress = useCallback((key, code, modifier, event) => {
+        if (testState !== "running") {
+          if (key === "Enter" || key === " ") {
+            handleStartTest();
+          }
+          return;
+        }
+
+        setPressedKeys(prev => new Set(prev).add(code));
+
+        if (key === "Backspace") {
+          setTypedInput(prev => prev.slice(0,-1));
+          audio.playKeyPress(false); return;
+        }
+        if (key.length > 1 && key !== " ") return;
+
+        // Determine active layer map (modifier passed synchronously from the event)
+        const activeLayerMap = resolveActiveKeymap(keyboardMap, modifier);
+        const effectiveChar = activeLayerMap ? (activeLayerMap[code] || key) : key;
+        const tc = promptText[typedInput.length];
+        setTotalKS(prev => prev+1);
+
+        // Latin scripts: accept base-letter matches so é/ñ/ü type on any layout
+        const isLatin = !keyboardMap;
+        const matches =
+          effectiveChar === tc ||
+          (tc === " " && (key === " " || effectiveChar === " ")) ||
+          (isLatin && tc && effectiveChar && stripDiacritics(effectiveChar) === stripDiacritics(tc));
+
+        if (matches) {
+          const ni = typedInput + effectiveChar;
+          setTypedInput(ni); setStreak(prev=>prev+1); setXp(prev=>prev+10);
+          audio.playKeyPress(false);
+
+          if (ni.length === promptText.length) {
+            // Compute final stats + stars on the final keystroke (closure holds pre-final totals)
+            const secs = (Date.now() - startTime) / 1000;
+            const finalWpm = secs > 0 ? Math.round((ni.length / 5) / (secs / 60)) : 0;
+            const finalKs = totalKS + 1;
+            const finalAcc = finalKs > 0 ? Math.max(0, Math.round(((finalKs - errorCount) / finalKs) * 100)) : 100;
+            let stars = computeStars(activeLevel.id, activeLevel.targetWpm, finalWpm, finalAcc);
+            setEarnedStars(stars);
+            setTestState("completed");
+            audio.playVictory();
+            setXp(prev=>prev+activeLevel.xpReward);
+            // Levels unlock only when the player earns 2 or more stars
+            if (stars >= 2 && activeLevel.id >= unlockedLevel) {
+              setUnlockedLevel(Math.min(LEVELS.length, activeLevel.id + 1));
+            }
+          }
+        } else {
+          setErrorCount(prev=>prev+1); setStreak(0); audio.playKeyPress(true);
+        }
+      }, [testState, typedInput, promptText, keyboardMap, activeLevel, unlockedLevel]);
+
+      useEffect(() => {
+        const kd = (e) => {
+          if (e.code === "Space" || e.code === "Tab") e.preventDefault();
+
+          const isShift = e.shiftKey || e.code === "ShiftLeft" || e.code === "ShiftRight";
+          const isAltGr = e.altKey || e.code === "AltRight";
+
+          const mod = (isAltGr && isShift) ? "altGrShift" : isAltGr ? "altGr" : isShift ? "shifted" : "unshifted";
+          setActiveModifier(mod);
+
+          handleKeyPress(e.key, e.code, mod, e);
+        };
+
+        const ku = (e) => {
+          setPressedKeys(prev => { const n=new Set(prev); n.delete(e.code); return n; });
+
+          const isShift = e.shiftKey;
+          const isAltGr = e.altKey;
+
+          if (isAltGr && isShift) setActiveModifier("altGrShift");
+          else if (isAltGr) setActiveModifier("altGr");
+          else if (isShift) setActiveModifier("shifted");
+          else setActiveModifier("unshifted");
+        };
+
+        window.addEventListener("keydown", kd);
+        window.addEventListener("keyup", ku);
+        return () => { window.removeEventListener("keydown",kd); window.removeEventListener("keyup",ku); };
+      }, [handleKeyPress]);
+
+      const xpPct = Math.min(100, Math.round((xp%1000)/1000*100));
+      const sc = SCRIPT_COLORS[activeLang.script] || "#64748b";
+
+      // Unlock status for the current level (2★ gate)
+      const nextUnlocked = activeLevel.id < LEVELS.length && activeLevel.id + 1 <= unlockedLevel;
+
+      return (
+        <div className="app-wrapper">
+          {showLangModal && (
+            <LanguageSelectorModal
+              activeLang={activeLang}
+              onSelect={setActiveLang}
+              onClose={() => setShowLangModal(false)}
+            />
+          )}
+
+          {showLevelModal && (
+            <LevelSelectorModal
+              activeLevel={activeLevel}
+              unlockedLevel={unlockedLevel}
+              onSelectLevel={setActiveLevel}
+              onClose={() => setShowLevelModal(false)}
+            />
+          )}
+
+          {/* LEVEL COMPLETE CELEBRATION MODAL */}
+          {testState === "completed" && (
+            <div className="modal-overlay">
+              <div className="glass" style={{ borderRadius:"24px",padding:"32px",maxWidth:"520px",width:"100%",textAlign:"center",borderColor:"#ffd700",boxShadow:"0 0 60px rgba(255,215,0,0.4)" }}>
+                <div style={{ fontSize:"54px",marginBottom:"8px" }}>🏆</div>
+                <h2 style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"20px",fontWeight:800,color:"#ffd700",letterSpacing:"0.08em" }}>LEVEL COMPLETE!</h2>
+                <div style={{ fontFamily:"'Rajdhani',sans-serif",fontSize:"14px",color:"#94a3b8",marginTop:"2px" }}>{activeLevel.name}</div>
+
+                {/* Stars */}
+                <div style={{ fontSize:"36px",margin:"14px 0 4px" }}>
+                  {"⭐".repeat(earnedStars)}{"☆".repeat(3 - earnedStars)}
+                </div>
+                <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",letterSpacing:"0.1em",marginTop:"2px",color: earnedStars >= 2 ? "#00ff88" : "#fb923c",textShadow: earnedStars >= 2 ? "0 0 10px rgba(0,255,136,0.5)" : "none" }}>
+                  {activeLevel.id < LEVELS.length
+                    ? (earnedStars >= 2 ? `⭐ LEVEL ${activeLevel.id + 1} UNLOCKED!` : "EARN 2★ TO UNLOCK THE NEXT LEVEL")
+                    : "ALL 40 LEVELS MASTERED — LEGENDARY!"}
+                </div>
+                <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",letterSpacing:"0.12em",marginTop:"8px",color:"#475569" }}>
+                  💡 TIP: <span style={{ color:"#ffd700" }}>2★</span> IS ALL YOU NEED TO UNLOCK THE NEXT LEVEL
+                </div>
+
+                <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px",margin:"16px 0" }}>
+                  <div className="metric-card" style={{ textAlign:"center" }}>
+                    <div style={{ fontSize:"8px",fontFamily:"'Orbitron',sans-serif",color:"#64748b" }}>SPEED</div>
+                    <div style={{ fontSize:"20px",fontFamily:"'JetBrains Mono',monospace",color:"#00f5ff",fontWeight:800 }}>{wpm}<span style={{ fontSize:"9px" }}>WPM</span></div>
+                  </div>
+                  <div className="metric-card" style={{ textAlign:"center" }}>
+                    <div style={{ fontSize:"8px",fontFamily:"'Orbitron',sans-serif",color:"#64748b" }}>ACCURACY</div>
+                    <div style={{ fontSize:"20px",fontFamily:"'JetBrains Mono',monospace",color:"#00ff88",fontWeight:800 }}>{accuracy}<span style={{ fontSize:"9px" }}>%</span></div>
+                  </div>
+                  <div className="metric-card" style={{ textAlign:"center" }}>
+                    <div style={{ fontSize:"8px",fontFamily:"'Orbitron',sans-serif",color:"#64748b" }}>REWARD</div>
+                    <div style={{ fontSize:"20px",fontFamily:"'JetBrains Mono',monospace",color:"#ffd700",fontWeight:800 }}>+{activeLevel.xpReward}<span style={{ fontSize:"9px" }}>XP</span></div>
+                  </div>
+                </div>
+
+                <div style={{ display:"flex",gap:"10px",justifyContent:"center",marginTop:"20px" }}>
+                  <button className="btn-cyber" onClick={handleStartTest} style={{ padding:"10px 20px" }}>↺ RETRY</button>
+                  {activeLevel.id < LEVELS.length ? (
+                    nextUnlocked ? (
+                      <button className="btn-start-test" onClick={() => {
+                        const nextLvl = LEVELS.find(l => l.id === activeLevel.id + 1);
+                        if (nextLvl) { setActiveLevel(nextLvl); setTestState("idle"); }
+                      }} style={{ padding:"10px 24px",fontSize:"12px" }}>
+                        NEXT LEVEL ▶
+                      </button>
+                    ) : (
+                      <button className="btn-cyber" disabled style={{ padding:"10px 20px",opacity:0.55,cursor:"not-allowed",borderColor:"rgba(251,146,60,0.4)",color:"#fb923c" }}>🔒 EARN 2★ ▶</button>
+                    )
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── HEADER ── */}
+          <header className="glass" style={{ borderRadius:"16px",padding:"12px 20px",display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:"10px" }}>
+            <div style={{ display:"flex",alignItems:"center",gap:"12px" }}>
+              <div style={{ width:"40px",height:"40px",borderRadius:"12px",background:`linear-gradient(135deg, ${currentTheme.accentHex}33, rgba(155,48,255,0.15))`,border:`1px solid ${currentTheme.accentHex}66`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px",boxShadow:`0 0 18px ${currentTheme.accentHex}44` }}>⌨️</div>
+              <div>
+                <h1 style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"13px",fontWeight:800,letterSpacing:"0.08em",background:`linear-gradient(90deg,${currentTheme.accentHex},#ff00e5)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",margin:0 }}>3D TOUCH TYPING MASTER</h1>
+                <p style={{ fontSize:"9px",color:"#475569",fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.1em",marginTop:"2px" }}>CYBERPUNK · 40 LEVELS · 100+ LANGUAGES</p>
+              </div>
+            </div>
+
+            {/* LEVEL SELECTOR BADGE */}
+            <button className="btn-lang" onClick={() => setShowLevelModal(true)} style={{ borderColor:"rgba(255,215,0,0.4)",background:"linear-gradient(135deg,rgba(255,215,0,0.15),rgba(155,48,255,0.12))" }}>
+              <span style={{ fontSize:"16px" }}>🎯</span>
+              <span style={{ color:"#ffd700" }}>{activeLevel.name.split(":")[0]}</span>
+              <span style={{ fontSize:"8px",padding:"1px 5px",borderRadius:"4px",background:"rgba(255,215,0,0.2)",color:"#ffd700" }}>{activeLevel.difficulty}</span>
+              <span style={{ fontSize:"9px",color:"#ffd700" }}>▼</span>
+            </button>
+
+            {/* 10 COLOR THEME SELECTOR */}
+            <div style={{ display:"flex",alignItems:"center",gap:"5px",background:"rgba(0,0,0,0.4)",padding:"5px 10px",borderRadius:"12px",border:"1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",fontWeight:700,color:"#94a3b8",marginRight:"4px" }}>THEMES:</span>
+              {COLOR_THEMES.map(th => (
+                <button
+                  key={th.id}
+                  className={`theme-swatch-btn ${currentTheme.id === th.id ? "active" : ""}`}
+                  style={{ background: th.swatch }}
+                  onClick={() => setCurrentTheme(th)}
+                  title={th.name}
+                >
+                  {th.icon}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display:"flex",alignItems:"center",gap:"8px",flexWrap:"wrap" }}>
+              {/* Active Language Badge */}
+              <button className="btn-lang" onClick={() => setShowLangModal(true)}>
+                <span style={{ fontSize:"16px" }}>{activeLang.flag}</span>
+                <span>{activeLang.name}</span>
+                <span style={{ fontSize:"8px",padding:"1px 5px",borderRadius:"4px",background:`${sc}22`,border:`1px solid ${sc}44`,color:sc }}>{activeLang.script}</span>
+                <span style={{ fontSize:"9px",color:"#c084fc" }}>▼</span>
+              </button>
+
+              {/* XP */}
+              <div style={{ display:"flex",flexDirection:"column",alignItems:"flex-end",gap:"3px" }}>
+                <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"10px",color:"#ffd700",textShadow:"0 0 10px #ffd70080",fontWeight:700 }}>⚡ {xp} XP</span>
+                <div className="xp-bar-track" style={{ width:"70px" }}><div className="xp-bar-fill" style={{ width:`${xpPct}%` }} /></div>
+              </div>
+
+              {/* Audio */}
+              <button className="btn-cyber" onClick={() => { setAudioEnabled(v=>!v); audio.enabled=!audioEnabled; }} style={{ borderColor:audioEnabled?`${currentTheme.accentHex}66`:"rgba(255,70,100,0.4)",color:audioEnabled?currentTheme.accentHex:"#ff4466" }}>
+                {audioEnabled?"🔊":"🔇"}
+              </button>
+
+              {/* Camera */}
+              <div style={{ display:"flex",gap:"3px",background:"rgba(0,0,0,0.4)",padding:"3px",borderRadius:"9px",border:"1px solid rgba(255,255,255,0.06)" }}>
+                {["isometric","fps","top"].map(m => (
+                  <button key={m} className={`btn-cyber ${cameraPreset===m?"active":""}`} onClick={() => setCameraPreset(m)} style={{ padding:"3px 8px",fontSize:"9px" }}>{m.toUpperCase()}</button>
+                ))}
+              </div>
+
+              <button className="btn-cyber" onClick={handleReset} style={{ borderColor:"rgba(255,0,229,0.3)",color:"#ff00e5" }}>↺</button>
+            </div>
+          </header>
+
+          {/* ── MAIN ── */}
+          <main className="main-grid" style={{ flex:1 }}>
+
+            {/* LEFT SIDEBAR */}
+            <div className="sidebar">
+
+              {/* Metrics */}
+              <div className="glass-cyan" style={{ borderRadius:"16px",padding:"14px",borderColor:`${currentTheme.accentHex}33` }}>
+                <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:700,letterSpacing:"0.12em",color:`${currentTheme.accentHex}aa`,textTransform:"uppercase",marginBottom:"10px" }}>Live Metrics</div>
+                <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px" }}>
+                  <MetricCard label="Speed"    value={wpm}      unit="WPM" color={currentTheme.accentHex} />
+                  <MetricCard label="Accuracy" value={accuracy} unit="%"   color="#00ff88" />
+                  <MetricCard label="Streak"   value={streak}   unit="x"   color="#ffd700" />
+                  <MetricCard label="Time"     value={elapsed}  unit="s"   color="#a855f7" />
+                </div>
+                <div style={{ marginTop:"12px" }}>
+                  <div style={{ display:"flex",justifyContent:"space-between",marginBottom:"4px" }}>
+                    <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:"#475569",letterSpacing:"0.1em" }}>PROGRESS</span>
+                    <span style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:"10px",color:currentTheme.accentHex,fontWeight:700 }}>{progress}%</span>
+                  </div>
+                  <div style={{ height:"4px",background:"rgba(255,255,255,0.06)",borderRadius:"2px",overflow:"hidden" }}>
+                    <div style={{ height:"100%",width:`${progress}%`,background:`linear-gradient(90deg,${currentTheme.accentHex},#9b30ff)`,borderRadius:"2px",transition:"width 0.35s ease",boxShadow:`0 0 10px ${currentTheme.accentHex}88` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Level Badge */}
+              <div className="glass" style={{ borderRadius:"14px",padding:"12px 14px",borderColor:"rgba(255,215,0,0.3)",cursor:"pointer" }} onClick={() => setShowLevelModal(true)}>
+                <div style={{ display:"flex",alignItems:"center",gap:"10px" }}>
+                  <div style={{ fontSize:"26px" }}>🎯</div>
+                  <div>
+                    <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:"#ffd700",letterSpacing:"0.1em" }}>ACTIVE LEVEL</div>
+                    <div style={{ fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:"14px",color:"#ffffff" }}>{activeLevel.name}</div>
+                    <div style={{ fontSize:"10px",color:"#94a3b8",marginTop:"1px" }}>Target: {activeLevel.targetWpm} WPM · {activeLevel.difficulty}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign:"center",marginTop:"8px",fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:"rgba(255,215,0,0.7)",letterSpacing:"0.1em" }}>SELECT LEVEL (1-40) ▼</div>
+              </div>
+
+              {/* 4-Layer Modifier State Card */}
+              <div className="glass" style={{ borderRadius:"14px",padding:"12px 14px",borderColor:`${currentTheme.accentHex}44` }}>
+                <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:"#64748b",letterSpacing:"0.1em",marginBottom:"6px" }}>MODIFIER KEYMAP LAYER</div>
+                <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px" }}>
+                  {[
+                    { id:"unshifted", label:"[Unshifted]" },
+                    { id:"shifted",   label:"[Shifted]" },
+                    { id:"altGr",     label:"[AltRight (AltGr)]" },
+                    { id:"altGrShift",label:"[AltGr + Shift]" },
+                  ].map(layer => (
+                    <button
+                      key={layer.id}
+                      className={`btn-layer ${activeModifier === layer.id ? "active" : ""}`}
+                      onClick={() => setActiveModifier(layer.id)}
+                    >
+                      {layer.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Next key callout */}
+              {activeTargetKey && testState === "running" && (
+                <div className="glass" style={{ borderRadius:"14px",padding:"12px 14px",borderColor:`${FINGER_COLORS[activeTargetKey.finger].hex}44`,boxShadow:`0 0 20px ${FINGER_COLORS[activeTargetKey.finger].glow}`,display:"flex",alignItems:"center",gap:"12px" }}>
+                  <div style={{ width:"50px",height:"50px",borderRadius:"12px",flexShrink:0,background:`${FINGER_COLORS[activeTargetKey.finger].hex}18`,border:`2px solid ${FINGER_COLORS[activeTargetKey.finger].hex}55`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'JetBrains Mono',monospace",fontSize:"22px",fontWeight:800,color:FINGER_COLORS[activeTargetKey.finger].hex,textShadow:`0 0 14px ${FINGER_COLORS[activeTargetKey.finger].hex}` }}>
+                    {targetChar === " " ? "⎵" : targetChar}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",letterSpacing:"0.1em",color:"#475569",textTransform:"uppercase",marginBottom:"3px" }}>Next Key</div>
+                    <div style={{ fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:"12px",color:FINGER_COLORS[activeTargetKey.finger].hex }}>
+                      {activeTargetKey.hand.toUpperCase()} · {FINGER_COLORS[activeTargetKey.finger].label.toUpperCase()}
+                    </div>
+                    {targetLayer && targetLayer !== "unshifted" && (
+                      <div style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",fontWeight:700,letterSpacing:"0.08em",color:"#ffd700",marginTop:"3px" }}>
+                        HOLD {targetLayer === "altGrShift" ? "ALTGR + SHIFT" : targetLayer.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <FingerHUD activeTargetKey={testState === "running" ? activeTargetKey : null} />
+            </div>
+
+            {/* RIGHT CONTENT */}
+            <div className="content-col">
+
+              {/* Prompt Card & Start Test Flow */}
+              <div className="glass-cyan scanlines" style={{ borderRadius:"16px",padding:"20px",position:"relative",borderColor:`${currentTheme.accentHex}33` }}>
+                <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"12px" }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:"8px" }}>
+                    <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",fontWeight:700,letterSpacing:"0.14em",color:`${currentTheme.accentHex}bb`,textTransform:"uppercase" }}>▶ TYPING PROMPT</span>
+                    <span style={{ fontSize:"8px",padding:"2px 8px",borderRadius:"6px",background:"rgba(255,215,0,0.15)",border:"1px solid rgba(255,215,0,0.3)",color:"#ffd700",fontFamily:"'Orbitron',sans-serif",fontWeight:700 }}>
+                      {activeLevel.name.split(":")[0]}
+                    </span>
+                  </div>
+                  <div style={{ display:"flex",alignItems:"center",gap:"6px" }}>
+                    <span style={{ fontSize:"14px" }}>{activeLang.flag}</span>
+                    <span style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:sc,letterSpacing:"0.08em" }}>{activeLang.name.toUpperCase()} · {activeLang.script.toUpperCase()}</span>
+                    {activeLang.rtl && <span className="rtl-badge">RTL</span>}
+                  </div>
+                </div>
+
+                {/* PROMPT TEXT */}
+                <div
+                  style={{ fontFamily:"'JetBrains Mono','Noto Sans','Noto Sans Devanagari','Noto Sans Bengali','Noto Sans Tamil','Noto Sans Malayalam','Noto Sans Telugu','Noto Sans Kannada','Noto Sans Gujarati','Noto Sans Gurmukhi','Noto Sans Oriya','Noto Sans Sinhala','Noto Sans Arabic','Noto Sans Hebrew','Noto Sans Greek','Noto Sans Thai','Noto Sans Georgian','Noto Sans Armenian','Noto Sans Ethiopic','Noto Sans Myanmar','Noto Sans Cherokee','Noto Sans Meetei Mayek','Noto Sans Tibetan','Noto Sans Ol Chiki','Noto Sans Thaana','Noto Sans Khmer','Noto Sans Lao',sans-serif", fontSize:"clamp(15px,1.8vw,21px)", lineHeight:"1.9", letterSpacing:"0.04em", display:"flex", flexWrap:"wrap", gap:"1px", minHeight:"60px", opacity: testState === "idle" ? 0.45 : 1, transition:"opacity 0.3s ease", direction: activeLang.rtl ? "rtl" : "ltr" }}
+                >
+                  {[...promptText].map((ch, i) => {
+                    const isTyped   = i < typedInput.length;
+                    const isCurrent = testState === "running" && i === typedInput.length;
+                    const isCorrect = isTyped && typedInput[i] === ch;
+                    let cls = "prompt-pending";
+                    if (isCorrect)   cls = "prompt-correct";
+                    else if (isTyped)  cls = "prompt-error";
+                    else if (isCurrent) cls = "prompt-current";
+                    return <span key={i} className={cls} style={{ padding:"1px 2px",borderRadius:"3px",fontFamily:"'JetBrains Mono','Noto Sans','Noto Sans Devanagari','Noto Sans Bengali','Noto Sans Tamil','Noto Sans Malayalam','Noto Sans Telugu','Noto Sans Kannada','Noto Sans Gujarati','Noto Sans Gurmukhi','Noto Sans Oriya','Noto Sans Sinhala','Noto Sans Arabic','Noto Sans Hebrew','Noto Sans Greek','Noto Sans Thai','Noto Sans Georgian','Noto Sans Armenian','Noto Sans Ethiopic','Noto Sans Myanmar','Noto Sans Cherokee','Noto Sans Meetei Mayek','Noto Sans Tibetan','Noto Sans Ol Chiki','Noto Sans Thaana','Noto Sans Khmer','Noto Sans Lao',sans-serif" }}>{ch === " " ? "\u00A0" : ch}</span>;
+                  })}
+                </div>
+
+                {/* START TEST BUTTON FLOW */}
+                {testState === "idle" && (
+                  <div style={{ marginTop:"16px",paddingTop:"14px",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",alignItems:"center",gap:"10px" }}>
+                    <button className="btn-start-test" onClick={handleStartTest}>
+                      🚀 START TEST
+                    </button>
+                    <p style={{ fontFamily:"'Orbitron',sans-serif",fontSize:"9px",color:"#94a3b8",letterSpacing:"0.1em" }}>
+                      CLICK <span style={{ color:"#00f5ff" }}>'START TEST'</span> OR PRESS <span style={{ color:"#00f5ff" }}>ENTER / SPACE</span> TO BEGIN
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 3D Keyboard Canvas */}
+              <div className="glass scanlines" style={{ borderRadius:"18px",overflow:"hidden",height:"clamp(340px,40vh,480px)",position:"relative",boxShadow:`0 0 40px ${currentTheme.accentHex}15, 0 0 80px rgba(155,48,255,0.05)`,borderColor:`${currentTheme.accentHex}33` }}>
+                <Keyboard3DCanvas
+                  pressedKeysRef={pressedKeysRef}
+                  activeTargetKeyRef={activeTargetRef}
+                  cameraPreset={cameraPreset}
+                  langCode={`${activeLang.code}-${activeLang.name}`}
+                  keyboardMap={keyboardMap}
+                  theme={currentTheme}
+                  activeModifier={activeModifier}
+                />
+                <div style={{ position:"absolute",top:"10px",left:"12px",fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:`${currentTheme.accentHex}66`,letterSpacing:"0.12em",pointerEvents:"none" }}>3D MECHANICAL · LIVE</div>
+                <div style={{ position:"absolute",top:"10px",right:"12px",fontFamily:"'Orbitron',sans-serif",fontSize:"8px",color:`${sc}66`,letterSpacing:"0.1em",pointerEvents:"none" }}>
+                  {activeLang.script.toUpperCase()} · LAYER: {activeModifier.toUpperCase()}
+                </div>
+                {activeLang.rtl && (
+                  <div style={{ position:"absolute",bottom:"10px",left:"12px",fontFamily:"'Orbitron',sans-serif",fontSize:"7px",color:"#fb923c66",letterSpacing:"0.1em",pointerEvents:"none" }}>RTL SCRIPT</div>
+                )}
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
